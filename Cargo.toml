@@ -4,3 +4,6 @@ members = [
     "client",
     "server"
 ]
+
+[workspace.dependencies]
+common = { path = "common" }
