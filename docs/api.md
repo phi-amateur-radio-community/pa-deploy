@@ -42,8 +42,8 @@ X-Nonce: <Nonce>
 
   If token authentication ois enabled on the server, this field is mandatory.
 
-  > [!WARNING]
-  > **Security Alert: If SSL/TLS isn't enabled, your token may be leaked !!!**
+> [!WARNING]
+> **Security Alert**: If **SSL/TLS** is disabled, your access token may be exposed.
 
 ***
 
