@@ -1,7 +1,7 @@
 # Pa Deploy API Document
 
 > Author: St Rangeset
-> Data: 2026-05-11
+> Date: 2026-05-11
 
 ## Request
 
@@ -13,9 +13,9 @@
 
 If you don't want to enable signature verification, please [skip it](#other-header).
 
-If you want to enable it, this part of header is required, and please read [Siguature](#signature).
+If you want to enable it, this part of header is required, and please read [Signature](#signature).
 
-> This is a n in-page link.
+> This is an in-page link.
 > If you can't jump, it's at the end of the document.
 
 ```
@@ -34,15 +34,16 @@ X-Nonce: <Nonce>
 ***
 
 - `Authorization: Bearer <Token>`
-  > **recommand**
+  > **recommended**
 
-  **Paremeter:**
+  **Parameter:**
 
   - Token: Access token set by your server
 
-  If the server enables authentication of Token, this must be filled in as your token.
+  If token authentication ois enabled on the server, this field is mandatory.
 
-  **!!! Warning: If SSL/TLS isn't enabled, your token may be leaked !!!**
+  > [!WARNING]
+  > **Security Alert: If SSL/TLS isn't enabled, your token may be leaked !!!**
 
 ***
 
@@ -56,38 +57,38 @@ X-Nonce: <Nonce>
 
   If you want to wait for the running status of the server, you can set it to true.
 
-  If it is true, the server will wait for a moment (configure at server) and carry the log (after tar) in the response body, and include `X-Run-Status: { Running | Succeeded | Failed }` at header.
+  If it is true, the server will wait for a moment (configure at server) and include the archived logs (tar format) in the response body, and include `X-Run-Status: { Running | Succeeded | Failed }` at header.
 
-  > If you server without configuration about mark of status, the Run-Status will disappear
+  > If the server is not configured to track status, the `X-Run-Status` header will be omitted.
 
-  And you can used `GET` and include the `Session-Code: <session_code>` `Authorization: Bearer <Token>` (if you enabled it) and other contents the same as the `POST` request at header, the server will send the running log and `X-Run-Status` again.
+  You can also use a `GET` request to poll the status and the log. Include the `Session-Code` and other headers used in the original `POST` request.
 
 - `session_code: <session_code>`
   > **required**
 
   A unique value is bound to a single deployment process.
-  It determines the path of log file, and the some others.
+  It determines the log file path and other session-specific resources.
 
   We recommend that you use the hash code of commit.
 
 
 ## Response
 
-- `20x`
+- `200 Series (Success)`
 
   It marks the success of the request.
 
   - `200 Ok`
 
-    When you enable `wait_status` and its value isn't `Running`.
+    Returned when `wait_status` is true and the process has finished.
 
     > **Header**
     - `Content-Type: application/x-tar`
-    - `X-Run-Status: { Succeeed | Failed }`
+    - `X-Run-Status: { Succeeded | Failed }`
 
       Status of this deployment.
 
-    > **Body:** Log files packaged by the tar, includes `stdout` and `stderr`
+    > **Body:** Log files in tar format, includes `stdout` and `stderr`
 
   - `202 Accepted`
 
@@ -125,7 +126,7 @@ X-Nonce: <Nonce>
 ### Header Parameter
 
 - `X-Signature` The signature calculated in the following text. Don't fill in unsigned request.
-- `X-Timestamp` The timestamp when sending the request, which is blocked according to the threshold set by the server, to prevent replay attacks.
+- `X-Timestamp` The timestamp when sending the request. Used to prevent replay attacks; requests exceeding the server's time-skew threshold will be rejected.
 - `X-Nonce` Random number, which is also used to prevent replay attacks. After the server is stored for a moment (at configuaration of server), the server will to block the requests with the same random number.
 
 ### Build an Unsigned Request
@@ -149,7 +150,7 @@ X-Nonce: <Nonce>
 
 - `HTTP_VERSION`: The version of the HTTP protocol you are using. (e.g., `HTTP/1.1`, `HTTP/2`).
 
-- `Header`: Key and value list of header, and arrange in alphabetical order.  
+- `Header`: Key and value list of header, and sort headers alphabetically by key.
   **e.g.**
   ```
   Content-Type: application/json
@@ -162,7 +163,7 @@ X-Nonce: <Nonce>
   Must contain `Content-Type` `Host`, and other headers you enable except `X-Signature`.
   If its method is `POST`, it also must to include `Content-Length`.
 
-- `Body`: Is must be consistent with the request body.
+- `Body`: Must be identical to the actual request body, and it also sort alphabetically by key.
 
 ### Sign
 
