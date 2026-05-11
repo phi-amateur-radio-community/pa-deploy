@@ -13,7 +13,7 @@ This project is used for the automated deployment of the project on the server, 
 ## Download
 
 You can download from [GitHub Release](https://github.com/phi-amateur-radio-community/pa-deploy/releases).
-Alternatively, check [our repositories](https://repos.phiarc.org/README.md) for system-specific packages.
+Alternatively, check [our repositories](https://repos.phiarc.org/index.html) for system-specific packages.
 
 ## Document
 
