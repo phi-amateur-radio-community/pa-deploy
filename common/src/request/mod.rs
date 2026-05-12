@@ -10,7 +10,6 @@ mod core;
 mod method;
 mod version;
 
-#[allow(unused)]
-use core::HttpRequest;
-use method::HttpMethod;
-use version::HttpVersion;
+pub use core::HttpRequest;
+pub use method::HttpMethod;
+pub use version::HttpVersion;

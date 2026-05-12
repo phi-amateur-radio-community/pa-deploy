@@ -6,7 +6,6 @@
 // Path /common/src/request/method.rs
 // HTTP method enum.
 
-#[allow(unused)]
 pub enum HttpMethod {
     Get,
     Post,

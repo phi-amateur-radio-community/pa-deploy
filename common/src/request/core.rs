@@ -18,7 +18,6 @@ pub struct HttpRequest {
     body: String,
 }
 
-#[allow(unused)]
 impl HttpRequest {
     pub fn new(method: HttpMethod, uri: String, version: HttpVersion) -> Self {
         HttpRequest {

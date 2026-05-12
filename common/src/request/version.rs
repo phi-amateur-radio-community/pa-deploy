@@ -6,14 +6,12 @@
 // Path /common/src/request/version.rs
 // HTTP version enum.
 
-#[allow(unused)]
 pub enum HttpVersion {
     V1_1,
     V2,
 }
 
 impl HttpVersion {
-    #[allow(unused)]
     pub fn default() -> Self {
         HttpVersion::V2
     }
