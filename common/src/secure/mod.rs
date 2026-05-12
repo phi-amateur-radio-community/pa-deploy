@@ -8,4 +8,4 @@
 
 mod signuare;
 
-pub use signuare::sign;
+pub use signuare::SignType;

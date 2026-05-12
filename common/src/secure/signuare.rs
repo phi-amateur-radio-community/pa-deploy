@@ -11,7 +11,21 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-pub fn sign(key: &[u8], msg: &[u8]) -> Result<String, hmac::digest::InvalidLength> {
+pub enum SignType {
+    Hmac,
+    Ed25519,
+}
+
+impl SignType {
+    pub fn sign(&self, key: &[u8], msg: &[u8]) -> Result<String, hmac::digest::InvalidLength> {
+        match self {
+            SignType::Hmac => sign_hmac(key, msg),
+            SignType::Ed25519 => Ok(String::from("")), // TODO(secure): add Ed25519 signature
+        }
+    }
+}
+
+fn sign_hmac(key: &[u8], msg: &[u8]) -> Result<String, hmac::digest::InvalidLength> {
     let mut mac = HmacSha256::new_from_slice(key)?;
     mac.update(msg);
 
