@@ -10,6 +10,14 @@ This project is used for the automated deployment of the project on the server, 
 - Supports multiple **Security** options for communication (e.g., HMAC-SHA256 signature, request body encryption).
 - **Retrieve deployment status and logs** asynchronously after execution.
 
+## Quick User Manual
+
+Download to your server from the link [below](#download) and enable it.
+And to modify the configuration.
+
+> [!TIP]
+> When you can't use the HTTPS, We recommond that you use `X25519` and `Ed25519` to ensure security.
+
 ## Download
 
 You can download from [GitHub Release](https://github.com/phi-amateur-radio-community/pa-deploy/releases).

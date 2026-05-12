@@ -47,7 +47,7 @@ X-Nonce: <Nonce>
 
 ***
 
-- `Encrypted: { none (default) | aes256 | rsa }`
+- `Encrypted: { none (default) | aes256 | rsa | x25519 }`
 
   If you want to encrypt the body, you must set it.
 
@@ -167,7 +167,7 @@ X-Nonce: <Nonce>
 
 ### Sign
 
-Use `HMAC-SHA256`, and the `Secret Key` needs to be the same as the server.
+Use `HMAC-SHA256` or `Ed25519`, and the `Secret Key` needs to match with the server.
 
 You will get a string as the value of the `X-Signature`.
 
