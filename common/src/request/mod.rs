@@ -3,12 +3,14 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/lib.rs
-// The common part of the project
+// Path /common/src/request/mod.rs
+// Request of HTTP(s)
 
-pub mod request;
+mod core;
+mod method;
+mod version;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-}
+#[allow(unused)]
+use core::HttpRequest;
+use method::HttpMethod;
+use version::HttpVersion;

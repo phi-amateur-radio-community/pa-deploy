@@ -3,12 +3,21 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/lib.rs
-// The common part of the project
+// Path /common/src/request/method.rs
+// HTTP method enum.
 
-pub mod request;
+#[allow(unused)]
+pub enum HttpMethod {
+    Get,
+    Post,
+}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[allow(unused)]
+impl HttpMethod {
+    pub fn to_string(&self) -> &str {
+        match self {
+            HttpMethod::Get  => "GET",
+            HttpMethod::Post => "POST",
+        }
+    }
 }
