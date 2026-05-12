@@ -1,0 +1,9 @@
+name: Phiarc Deploy Actions
+
+description: "Deploy client integrated in GitHub Actions"
+
+jobs:
+  using: "composite"
+  steps:
+    - name: TODO
+      run: echo "TODO"
