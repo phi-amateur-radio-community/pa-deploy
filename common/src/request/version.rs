@@ -20,8 +20,8 @@ impl HttpVersion {
 
     pub fn to_string(&self) -> &str {
         match self {
-            HttpVersion::V1_1  => "HTTP/1.1",
-            HttpVersion::V2    => "HTTP2",
+            HttpVersion::V1_1 => "HTTP/1.1",
+            HttpVersion::V2 => "HTTP2",
         }
     }
 }

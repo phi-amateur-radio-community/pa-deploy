@@ -16,7 +16,7 @@ pub enum HttpMethod {
 impl HttpMethod {
     pub fn to_string(&self) -> &str {
         match self {
-            HttpMethod::Get  => "GET",
+            HttpMethod::Get => "GET",
             HttpMethod::Post => "POST",
         }
     }
