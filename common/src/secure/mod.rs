@@ -3,13 +3,9 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/lib.rs
-// The common part of the project
+// Path /common/src/secure/mod.rs
+// Encryption method
 
-pub mod request;
-pub mod secure;
+mod signuare;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-}
+pub use signuare::sign;
