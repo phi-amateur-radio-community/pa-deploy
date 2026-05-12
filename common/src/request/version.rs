@@ -6,16 +6,14 @@
 // Path /common/src/request/version.rs
 // HTTP version enum.
 
+#[derive(Default)]
 pub enum HttpVersion {
     V1_1,
+    #[default]
     V2,
 }
 
 impl HttpVersion {
-    pub fn default() -> Self {
-        HttpVersion::V2
-    }
-
     pub fn to_string(&self) -> &str {
         match self {
             HttpVersion::V1_1 => "HTTP/1.1",
