@@ -12,7 +12,6 @@ pub enum HttpMethod {
     Post,
 }
 
-#[allow(unused)]
 impl HttpMethod {
     pub fn to_string(&self) -> &str {
         match self {

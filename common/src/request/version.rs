@@ -12,8 +12,8 @@ pub enum HttpVersion {
     V2,
 }
 
-#[allow(unused)]
 impl HttpVersion {
+    #[allow(unused)]
     pub fn default() -> Self {
         HttpVersion::V2
     }

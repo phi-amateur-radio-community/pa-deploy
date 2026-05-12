@@ -10,7 +10,6 @@ use super::HttpMethod;
 use super::HttpVersion;
 use std::collections::HashMap;
 
-#[allow(unused)]
 pub struct HttpRequest {
     method: HttpMethod,
     uri: String,
