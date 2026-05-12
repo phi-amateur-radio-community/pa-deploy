@@ -54,6 +54,10 @@ impl HttpRequest {
         s
     }
 
+    pub fn remove_header(&mut self, key: &str) {
+        self.header.remove(key);
+    }
+
     fn push_header(&self, s: &mut String, key: &str) {
         let value = &self.header[key];
         s.push_str(key);
