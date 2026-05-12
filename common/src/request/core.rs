@@ -35,7 +35,7 @@ impl HttpRequest {
         self.header.insert(key, value);
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn serialize(&self) -> String {
         let mut s = String::from("");
         s.push_str(self.method.to_string());
         s.push(' ');
