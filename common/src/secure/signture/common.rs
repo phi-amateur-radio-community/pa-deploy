@@ -3,14 +3,13 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/secure/signuare.rs
-// Sign and check the HTTP request.
+// Path /common/src/secure/signuare/common.rs
+// API of signer
 
-use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
-use hmac::{Hmac, KeyInit, Mac};
-use sha2::Sha256;
-
-type HmacSha256 = Hmac<Sha256>;
+use super::{ed25519::*, hmac::*};
+use ed25519_dalek;
+use ed25519_dalek::{SigningKey, VerifyingKey};
+use hmac;
 
 pub struct CommonSigner {
     item: SignItem,
@@ -71,50 +70,5 @@ impl CommonSigner {
             SignItem::HmacSha256(verifier) => verifier.verify(msg, signature),
             SignItem::Ed25519(verifier) => verifier.verify(msg, signature),
         }
-    }
-}
-
-struct HmacSign {
-    key: Vec<u8>,
-}
-
-impl HmacSign {
-    fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
-        let mut mac = HmacSha256::new_from_slice(&self.key)?;
-        mac.update(msg);
-
-        let result = mac.finalize();
-        let bytes = result.into_bytes();
-
-        Ok(bytes.into())
-    }
-
-    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
-        Ok(self.sign(msg)? == signature)
-    }
-}
-
-enum Ed25519Sign {
-    PrivateKey(SigningKey),
-    PublicKey(VerifyingKey),
-}
-
-impl Ed25519Sign {
-    fn sign(&self, msg: &[u8]) -> Result<[u8; 64], SignError> {
-        let pri_key: &SigningKey = match self {
-            Ed25519Sign::PrivateKey(key) => key,
-            Ed25519Sign::PublicKey(_) => return Err(SignError::NoneKeyError),
-        };
-        Ok(pri_key.sign(msg).into())
-    }
-
-    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
-        let verifying_key: &VerifyingKey = match self {
-            Ed25519Sign::PrivateKey(key) => &key.verifying_key(),
-            Ed25519Sign::PublicKey(key) => key,
-        };
-        Ok(verifying_key
-            .verify_strict(msg, &Signature::from_slice(signature)?)
-            .is_ok())
     }
 }
