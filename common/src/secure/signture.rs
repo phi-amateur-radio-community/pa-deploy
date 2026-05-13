@@ -12,11 +12,6 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-pub trait Signable {
-    fn sign(&self, msg: &[u8]) -> Result<SignatureItem, SignError>;
-    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError>;
-}
-
 pub enum SignatureItem {
     Ed25519([u8; 64]),
     HmacSha256([u8; 32]),
@@ -26,66 +21,78 @@ pub enum SignatureItem {
 pub enum SignError {
     #[error("HMAC key invalid length")]
     HmacInvalidLength(#[from] hmac::digest::InvalidLength),
-    #[error("Missing private key of Ed25519")]
-    NoneKeyError,
     #[error("Ed25519 Error")]
     Ed25519Error(#[from] ed25519_dalek::ed25519::Error),
+    #[error("Missing private key of Ed25519")]
+    NoneKeyError,
+    #[error("Mismatched key")]
+    UnmatchKeyError,
+}
+
+pub enum KeyType<'a> {
+    PrivateKey([u8; 32]),
+    PublicKey([u8; 32]),
+    SymmetricKey(&'a [u8]),
 }
 
 pub struct HmacSign {
-    key: Vec<u8>,
+    mac: HmacSha256,
 }
 
-pub enum Ed25519Sign {
-    PrivateKey([u8; 32]),
-    PublicKey([u8; 32]),
-}
+impl HmacSign {
+    pub fn new(key: &KeyType) -> Result<Self, SignError> {
+        let sym_key = match key {
+            KeyType::SymmetricKey(key) => key,
+            _ => return Err(SignError::UnmatchKeyError),
+        };
+        let mac = HmacSha256::new_from_slice(sym_key)?;
+        Ok(HmacSign { mac })
+    }
 
-impl Signable for HmacSign {
-    fn sign(&self, msg: &[u8]) -> Result<SignatureItem, SignError> {
-        let mut mac = HmacSha256::new_from_slice(&self.key)?;
+    pub fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
+        let mut mac = self.mac.clone();
         mac.update(msg);
 
         let result = mac.finalize();
         let bytes = result.into_bytes();
 
-        Ok(SignatureItem::HmacSha256(bytes.into()))
+        Ok(bytes.into())
     }
 
-    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
-        Ok(self.sign(msg)?.equal(signature))
+    pub fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        Ok(self.sign(msg)? == signature)
     }
 }
 
-impl Signable for Ed25519Sign {
-    fn sign(&self, msg: &[u8]) -> Result<SignatureItem, SignError> {
-        let pri_key = match self {
-            Ed25519Sign::PrivateKey(key) => SigningKey::from_bytes(key),
-            Ed25519Sign::PublicKey(_) => return Err(SignError::NoneKeyError),
-        };
-        Ok(SignatureItem::Ed25519(pri_key.sign(msg).into()))
+pub enum Ed25519Sign {
+    PrivateKey(SigningKey),
+    PublicKey(VerifyingKey),
+}
+
+impl Ed25519Sign {
+    pub fn new(key: &KeyType) -> Result<Self, SignError> {
+        Ok(match key {
+            KeyType::PrivateKey(key) => Ed25519Sign::PrivateKey(SigningKey::from_bytes(key)),
+            KeyType::PublicKey(key) => Ed25519Sign::PublicKey(VerifyingKey::from_bytes(key)?),
+            _ => return Err(SignError::UnmatchKeyError),
+        })
     }
 
-    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
-        let verify_key: VerifyingKey = match self {
-            Ed25519Sign::PrivateKey(key) => VerifyingKey::from_bytes(key)?,
-            Ed25519Sign::PublicKey(key) => VerifyingKey::from_bytes(key)?,
+    pub fn sign(&self, msg: &[u8]) -> Result<[u8; 64], SignError> {
+        let pri_key: &SigningKey = match self {
+            Ed25519Sign::PrivateKey(key) => key,
+            Ed25519Sign::PublicKey(_) => return Err(SignError::NoneKeyError),
+        };
+        Ok(pri_key.sign(msg).into())
+    }
+
+    pub fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        let verify_key: &VerifyingKey = match self {
+            Ed25519Sign::PrivateKey(key) => &key.verifying_key(),
+            Ed25519Sign::PublicKey(key) => key,
         };
         Ok(verify_key
             .verify_strict(msg, &Signature::from_slice(signature)?)
             .is_ok())
-    }
-}
-
-impl SignatureItem {
-    fn equal(&self, signature: &[u8]) -> bool {
-        self.get_value() == signature
-    }
-
-    pub fn get_value(&self) -> &[u8] {
-        match self {
-            SignatureItem::HmacSha256(value) => value,
-            SignatureItem::Ed25519(value) => value,
-        }
     }
 }
