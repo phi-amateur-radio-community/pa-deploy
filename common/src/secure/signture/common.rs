@@ -6,10 +6,8 @@
 // Path /common/src/secure/signuare/common.rs
 // API of signer
 
-use super::{ed25519::*, hmac::*};
-use ed25519_dalek;
+use super::{SignError, ed25519::*, hmac::*};
 use ed25519_dalek::{SigningKey, VerifyingKey};
-use hmac;
 
 pub struct CommonSigner {
     item: SignItem,
@@ -24,18 +22,6 @@ pub enum KeyType {
 pub enum SignatureItem {
     Ed25519([u8; 64]),
     HmacSha256([u8; 32]),
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum SignError {
-    #[error("HMAC key invalid length")]
-    HmacInvalidLength(#[from] hmac::digest::InvalidLength),
-    #[error("Ed25519 Error")]
-    Ed25519Error(#[from] ed25519_dalek::ed25519::Error),
-    #[error("Missing private key of Ed25519")]
-    NoneKeyError,
-    #[error("Mismatched key")]
-    UnmatchKeyError,
 }
 
 enum SignItem {

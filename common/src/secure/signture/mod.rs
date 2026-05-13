@@ -8,6 +8,8 @@
 
 mod common;
 mod ed25519;
+mod error;
 mod hmac;
 
 pub use common::*;
+pub use error::*;

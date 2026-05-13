@@ -6,7 +6,7 @@
 // Path /common/src/secure/signuare/hmac.rs
 // HMAC-SHA256 signer and verifier
 
-use super::common::SignError;
+use super::SignError;
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 

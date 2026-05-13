@@ -6,7 +6,7 @@
 // Path /common/src/secure/signuare/ed25519.rs
 // Ed25519 signer and verifier
 
-use super::common::SignError;
+use super::SignError;
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 
 pub enum Ed25519Sign {
