@@ -29,28 +29,23 @@ pub enum SignError {
     UnmatchKeyError,
 }
 
-pub enum KeyType<'a> {
+pub enum KeyType {
     PrivateKey([u8; 32]),
     PublicKey([u8; 32]),
-    SymmetricKey(&'a [u8]),
+    SymmetricKey(Vec<u8>),
 }
 
 pub struct HmacSign {
-    mac: HmacSha256,
+    key: Vec<u8>,
 }
 
 impl HmacSign {
-    pub fn new(key: &KeyType) -> Result<Self, SignError> {
-        let sym_key = match key {
-            KeyType::SymmetricKey(key) => key,
-            _ => return Err(SignError::UnmatchKeyError),
-        };
-        let mac = HmacSha256::new_from_slice(sym_key)?;
-        Ok(HmacSign { mac })
+    pub fn new(key: Vec<u8>) -> Result<Self, SignError> {
+        Ok(HmacSign { key })
     }
 
     pub fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
-        let mut mac = self.mac.clone();
+        let mut mac = HmacSha256::new_from_slice(&self.key)?;
         mac.update(msg);
 
         let result = mac.finalize();
