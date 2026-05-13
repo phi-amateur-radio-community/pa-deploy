@@ -47,7 +47,7 @@ X-Nonce: <Nonce>
 
 ***
 
-- `Encrypted: { none (default) | aes256 | rsa | x25519 }`
+- `Encrypted: { none (default) | aes256 | rsa-aes256 | x25519-aes256 | x25519-cha }`
 
   If you want to encrypt the body, you must set it.
 
@@ -57,7 +57,7 @@ X-Nonce: <Nonce>
 
   If you want to wait for the running status of the server, you can set it to true.
 
-  If it is true, the server will wait for a moment (configure at server) and include the archived logs (tar format) in the response body, and include `X-Run-Status: { Running | Succeeded | Failed }` at header.
+  If it is true, the server will wait for a moment (configure at server) and include the archived logs (tar format) in the response body, and include `X-Run-Status: { Running | Succeeded | Failed | Pending }` at header.
 
   > If the server is not configured to track status, the `X-Run-Status` header will be omitted.
 
@@ -104,9 +104,14 @@ X-Nonce: <Nonce>
 
   - `204 No Content`
 
-    When you disable `wait_status`.
+    When `wait_status` is disable or equal `Pending`. 
 
-    **Null Content**
+    > **Header**
+    - `X-Run-Status: Pending`
+
+      This header will only be available when you enable `wait_status` and equal `Pending`.
+
+    **Null Body**
 
 - `40x`
 
