@@ -12,20 +12,19 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-pub enum SignatureItem {
-    Ed25519([u8; 64]),
-    HmacSha256([u8; 32]),
-}
-
-pub enum SignItem {
-    HmacSha256(HmacSign),
-    Ed25519(Box<Ed25519Sign>),
+pub struct CommonSigner {
+    item: SignItem,
 }
 
 pub enum KeyType {
     PrivateKey([u8; 32]),
     PublicKey([u8; 32]),
     SymmetricKey(Vec<u8>),
+}
+
+pub enum SignatureItem {
+    Ed25519([u8; 64]),
+    HmacSha256([u8; 32]),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -40,26 +39,47 @@ pub enum SignError {
     UnmatchKeyError,
 }
 
-impl SignItem {
+enum SignItem {
+    HmacSha256(HmacSign),
+    Ed25519(Box<Ed25519Sign>),
+}
+
+impl CommonSigner {
     pub fn new(key: KeyType) -> Result<Self, SignError> {
-        Ok(match key {
-            KeyType::PrivateKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PrivateKey(
-                SigningKey::from_bytes(&key),
-            ))),
-            KeyType::PublicKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PublicKey(
-                VerifyingKey::from_bytes(&key)?,
-            ))),
-            KeyType::SymmetricKey(key) => SignItem::HmacSha256(HmacSign { key }),
+        Ok(CommonSigner {
+            item: match key {
+                KeyType::PrivateKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PrivateKey(
+                    SigningKey::from_bytes(&key),
+                ))),
+                KeyType::PublicKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PublicKey(
+                    VerifyingKey::from_bytes(&key)?,
+                ))),
+                KeyType::SymmetricKey(key) => SignItem::HmacSha256(HmacSign { key }),
+            },
         })
+    }
+
+    pub fn sign(&self, msg: &[u8]) -> Result<SignatureItem, SignError> {
+        Ok(match &self.item {
+            SignItem::HmacSha256(signer) => SignatureItem::HmacSha256(signer.sign(msg)?),
+            SignItem::Ed25519(signer) => SignatureItem::Ed25519(signer.sign(msg)?),
+        })
+    }
+
+    pub fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        match &self.item {
+            SignItem::HmacSha256(verifier) => verifier.verify(msg, signature),
+            SignItem::Ed25519(verifier) => verifier.verify(msg, signature),
+        }
     }
 }
 
-pub struct HmacSign {
+struct HmacSign {
     key: Vec<u8>,
 }
 
 impl HmacSign {
-    pub fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
+    fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
         let mut mac = HmacSha256::new_from_slice(&self.key)?;
         mac.update(msg);
 
@@ -69,18 +89,18 @@ impl HmacSign {
         Ok(bytes.into())
     }
 
-    pub fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
         Ok(self.sign(msg)? == signature)
     }
 }
 
-pub enum Ed25519Sign {
+enum Ed25519Sign {
     PrivateKey(SigningKey),
     PublicKey(VerifyingKey),
 }
 
 impl Ed25519Sign {
-    pub fn sign(&self, msg: &[u8]) -> Result<[u8; 64], SignError> {
+    fn sign(&self, msg: &[u8]) -> Result<[u8; 64], SignError> {
         let pri_key: &SigningKey = match self {
             Ed25519Sign::PrivateKey(key) => key,
             Ed25519Sign::PublicKey(_) => return Err(SignError::NoneKeyError),
@@ -88,12 +108,12 @@ impl Ed25519Sign {
         Ok(pri_key.sign(msg).into())
     }
 
-    pub fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
-        let verify_key: &VerifyingKey = match self {
+    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        let verifying_key: &VerifyingKey = match self {
             Ed25519Sign::PrivateKey(key) => &key.verifying_key(),
             Ed25519Sign::PublicKey(key) => key,
         };
-        Ok(verify_key
+        Ok(verifying_key
             .verify_strict(msg, &Signature::from_slice(signature)?)
             .is_ok())
     }
