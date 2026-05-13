@@ -16,8 +16,14 @@ pub enum SignType {
     Ed25519,
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum SignError {
+    #[error("HMAC key invalid length")]
+    HmacInvalidLength(#[from] hmac::digest::InvalidLength),
+}
+
 impl SignType {
-    pub fn sign(&self, key: &[u8], msg: &[u8]) -> Result<String, hmac::digest::InvalidLength> {
+    pub fn sign(&self, key: &[u8], msg: &[u8]) -> Result<String, SignError> {
         match self {
             SignType::Hmac => sign_hmac(key, msg),
             SignType::Ed25519 => Ok(String::from("")), // TODO(secure): add Ed25519 signature
@@ -25,7 +31,7 @@ impl SignType {
     }
 }
 
-fn sign_hmac(key: &[u8], msg: &[u8]) -> Result<String, hmac::digest::InvalidLength> {
+fn sign_hmac(key: &[u8], msg: &[u8]) -> Result<String, SignError> {
     let mut mac = HmacSha256::new_from_slice(key)?;
     mac.update(msg);
 
