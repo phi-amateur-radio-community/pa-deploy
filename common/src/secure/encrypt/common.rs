@@ -8,10 +8,10 @@
 
 pub enum EncryptMethod {
     Unencrypt,
-    OnlyAes,   // TODO(encrypt): AES-256-GCM
-    RsaAes,    // TODO(encrypt): RSA-OAEP + AES-256-GCM
-    X25519Aes, // TODO(encrypt): X25519 + AES-256-GCM
-    X25519Cha, // TODO(encrypt): X25519 + ChaCha20-Poly1305
+    OnlyAes([u8; 32]), // TODO(encrypt): AES-256-GCM
+    RsaAes,            // TODO(encrypt): RSA-OAEP + AES-256-GCM
+    X25519Aes,         // TODO(encrypt): X25519 + AES-256-GCM
+    X25519Cha,         // TODO(encrypt): X25519 + ChaCha20-Poly1305
 }
 
 impl EncryptMethod {

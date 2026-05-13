@@ -3,11 +3,15 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/secure/encrypt/mod.rs
-// Encrypt module.
+// Path /common/src/secure/encrypt/error.rs
+// Error definition for encrypt.
 
-mod aes;
-pub mod common;
-mod error;
-
-pub use error::EncryptError;
+#[derive(Debug, thiserror::Error)]
+pub enum EncryptError {
+    #[error("Aes invalid key length")]
+    AesInvalidLength,
+    #[error("Aes encrypt failed")]
+    AesEncryptFailed,
+    #[error("Aes authentication failed")]
+    AesAuthFailed,
+}
