@@ -6,4 +6,4 @@
 // Path /common/src/secure/mod.rs
 // Encryption method
 
-pub mod signuare;
+pub mod signture;
