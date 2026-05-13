@@ -11,9 +11,9 @@ use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
-pub enum SignType {
-    Hmac,
-    Ed25519,
+pub trait Signable {
+    fn sign(&self, msg: &[u8]) -> Result<Vec<u8>, SignError>;
+    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -22,21 +22,24 @@ pub enum SignError {
     HmacInvalidLength(#[from] hmac::digest::InvalidLength),
 }
 
-impl SignType {
-    pub fn sign(&self, key: &[u8], msg: &[u8]) -> Result<String, SignError> {
-        match self {
-            SignType::Hmac => sign_hmac(key, msg),
-            SignType::Ed25519 => Ok(String::from("")), // TODO(secure): add Ed25519 signature
-        }
+pub struct HmacSign {
+    key: Vec<u8>,
+}
+
+impl Signable for HmacSign {
+    fn sign(&self, msg: &[u8]) -> Result<Vec<u8>, SignError> {
+        let mut mac = HmacSha256::new_from_slice(&self.key)?;
+        mac.update(msg);
+
+        let result = mac.finalize();
+        let bytes = result.into_bytes();
+
+        Ok(bytes.to_vec())
+    }
+
+    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        Ok(self.sign(msg)? == signature)
     }
 }
 
-fn sign_hmac(key: &[u8], msg: &[u8]) -> Result<String, SignError> {
-    let mut mac = HmacSha256::new_from_slice(key)?;
-    mac.update(msg);
-
-    let result = mac.finalize();
-    let bytes = result.into_bytes();
-
-    Ok(hex::encode(bytes))
-}
+// TODO(secure): add Ed25519 signature

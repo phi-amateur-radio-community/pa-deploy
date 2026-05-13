@@ -6,6 +6,4 @@
 // Path /common/src/secure/mod.rs
 // Encryption method
 
-mod signuare;
-
-pub use signuare::SignType;
+pub mod signuare;
