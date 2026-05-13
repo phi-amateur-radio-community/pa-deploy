@@ -6,26 +6,48 @@
 // Path /common/src/secure/encrypt/common.rs
 // API of encrypt module.
 
+use super::*;
+
 pub enum EncryptMethod {
     Unencrypt,
-    OnlyAes([u8; 32]), // TODO(encrypt): AES-256-GCM
-    RsaAes,            // TODO(encrypt): RSA-OAEP + AES-256-GCM
-    X25519Aes,         // TODO(encrypt): X25519 + AES-256-GCM
-    X25519Cha,         // TODO(encrypt): X25519 + ChaCha20-Poly1305
+    OnlyAes(Box<aes::AesEncrypt>),
+    RsaAes,    // TODO(encrypt): RSA-OAEP + AES-256-GCM
+    X25519Aes, // TODO(encrypt): X25519 + AES-256-GCM
+    X25519Cha, // TODO(encrypt): X25519 + ChaCha20-Poly1305
+}
+
+pub enum EncryptKey {
+    NoneKey,
+    AesKey([u8; 32], u32),
+    RsaKey,
+    X25519AesKey,
+    X25519ChaKey,
 }
 
 impl EncryptMethod {
-    pub fn encrypt(&self, msg: &[u8]) -> Vec<u8> {
+    pub fn new(key: EncryptKey) -> Result<Self, EncryptError> {
+        Ok(match key {
+            EncryptKey::NoneKey => EncryptMethod::Unencrypt,
+            EncryptKey::AesKey(key, session_id) => {
+                EncryptMethod::OnlyAes(Box::new(aes::AesEncrypt::new(&key, session_id)?))
+            }
+            _ => EncryptMethod::Unencrypt,
+        })
+    }
+
+    pub fn encrypt(&mut self, msg: &[u8]) -> Result<Vec<u8>, EncryptError> {
         match self {
-            EncryptMethod::Unencrypt => msg.to_vec(),
-            _ => Vec::<u8>::new(),
+            EncryptMethod::Unencrypt => Ok(msg.to_vec()),
+            EncryptMethod::OnlyAes(encrypt) => encrypt.encrypt(msg),
+            _ => Ok(Vec::<u8>::new()),
         }
     }
 
-    pub fn decrypt(&self, msg: &[u8]) -> Vec<u8> {
+    pub fn decrypt(&self, msg: &[u8]) -> Result<Vec<u8>, EncryptError> {
         match self {
-            EncryptMethod::Unencrypt => msg.to_vec(),
-            _ => Vec::<u8>::new(),
+            EncryptMethod::Unencrypt => Ok(msg.to_vec()),
+            EncryptMethod::OnlyAes(encrypt) => encrypt.decrypt(msg),
+            _ => Ok(Vec::<u8>::new()),
         }
     }
 }

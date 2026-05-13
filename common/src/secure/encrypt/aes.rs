@@ -9,14 +9,12 @@
 use super::EncryptError;
 use aes_gcm::{Aes256Gcm, KeyInit, aead::Aead};
 
-#[allow(unused)]
 pub struct AesEncrypt {
     aes: Aes256Gcm,
     counter: u64,
     session_id: u32,
 }
 
-#[allow(unused)]
 impl AesEncrypt {
     pub fn new(key: &[u8; 32], session_id: u32) -> Result<Self, EncryptError> {
         Ok(AesEncrypt {
