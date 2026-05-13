@@ -6,6 +6,7 @@
 // Path /common/src/secure/signuare.rs
 // Sign and check the HTTP request.
 
+use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 
@@ -25,10 +26,19 @@ pub enum SignatureItem {
 pub enum SignError {
     #[error("HMAC key invalid length")]
     HmacInvalidLength(#[from] hmac::digest::InvalidLength),
+    #[error("Missing private key of Ed25519")]
+    NoneKeyError,
+    #[error("Ed25519 Error")]
+    Ed25519Error(#[from] ed25519_dalek::ed25519::Error),
 }
 
 pub struct HmacSign {
     key: Vec<u8>,
+}
+
+pub enum Ed25519Sign {
+    PrivateKey([u8; 32]),
+    PublicKey([u8; 32]),
 }
 
 impl Signable for HmacSign {
@@ -47,6 +57,26 @@ impl Signable for HmacSign {
     }
 }
 
+impl Signable for Ed25519Sign {
+    fn sign(&self, msg: &[u8]) -> Result<SignatureItem, SignError> {
+        let pri_key = match self {
+            Ed25519Sign::PrivateKey(key) => SigningKey::from_bytes(key),
+            Ed25519Sign::PublicKey(_) => return Err(SignError::NoneKeyError),
+        };
+        Ok(SignatureItem::Ed25519(pri_key.sign(msg).into()))
+    }
+
+    fn verify(&self, msg: &[u8], signature: &[u8]) -> Result<bool, SignError> {
+        let verify_key: VerifyingKey = match self {
+            Ed25519Sign::PrivateKey(key) => VerifyingKey::from_bytes(key)?,
+            Ed25519Sign::PublicKey(key) => VerifyingKey::from_bytes(key)?,
+        };
+        Ok(verify_key
+            .verify_strict(msg, &Signature::from_slice(signature)?)
+            .is_ok())
+    }
+}
+
 impl SignatureItem {
     fn equal(&self, signature: &[u8]) -> bool {
         self.get_value() == signature
@@ -59,5 +89,3 @@ impl SignatureItem {
         }
     }
 }
-
-// TODO(secure): add Ed25519 signature
