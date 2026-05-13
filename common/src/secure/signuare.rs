@@ -49,9 +49,13 @@ impl Signable for HmacSign {
 
 impl SignatureItem {
     fn equal(&self, signature: &[u8]) -> bool {
+        self.get_value() == signature
+    }
+
+    pub fn get_value(&self) -> &[u8] {
         match self {
-            SignatureItem::HmacSha256(value) => value == signature,
-            SignatureItem::Ed25519(value) => value == signature,
+            SignatureItem::HmacSha256(value) => value,
+            SignatureItem::Ed25519(value) => value,
         }
     }
 }
