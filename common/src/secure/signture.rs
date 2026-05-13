@@ -17,6 +17,17 @@ pub enum SignatureItem {
     HmacSha256([u8; 32]),
 }
 
+pub enum SignItem {
+    HmacSha256(HmacSign),
+    Ed25519(Box<Ed25519Sign>),
+}
+
+pub enum KeyType {
+    PrivateKey([u8; 32]),
+    PublicKey([u8; 32]),
+    SymmetricKey(Vec<u8>),
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum SignError {
     #[error("HMAC key invalid length")]
@@ -29,10 +40,18 @@ pub enum SignError {
     UnmatchKeyError,
 }
 
-pub enum KeyType {
-    PrivateKey([u8; 32]),
-    PublicKey([u8; 32]),
-    SymmetricKey(Vec<u8>),
+impl SignItem {
+    pub fn new(key: KeyType) -> Result<Self, SignError> {
+        Ok(match key {
+            KeyType::PrivateKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PrivateKey(
+                SigningKey::from_bytes(&key),
+            ))),
+            KeyType::PublicKey(key) => SignItem::Ed25519(Box::new(Ed25519Sign::PublicKey(
+                VerifyingKey::from_bytes(&key)?,
+            ))),
+            KeyType::SymmetricKey(key) => SignItem::HmacSha256(HmacSign { key }),
+        })
+    }
 }
 
 pub struct HmacSign {
@@ -40,10 +59,6 @@ pub struct HmacSign {
 }
 
 impl HmacSign {
-    pub fn new(key: Vec<u8>) -> Result<Self, SignError> {
-        Ok(HmacSign { key })
-    }
-
     pub fn sign(&self, msg: &[u8]) -> Result<[u8; 32], SignError> {
         let mut mac = HmacSha256::new_from_slice(&self.key)?;
         mac.update(msg);
@@ -65,14 +80,6 @@ pub enum Ed25519Sign {
 }
 
 impl Ed25519Sign {
-    pub fn new(key: &KeyType) -> Result<Self, SignError> {
-        Ok(match key {
-            KeyType::PrivateKey(key) => Ed25519Sign::PrivateKey(SigningKey::from_bytes(key)),
-            KeyType::PublicKey(key) => Ed25519Sign::PublicKey(VerifyingKey::from_bytes(key)?),
-            _ => return Err(SignError::UnmatchKeyError),
-        })
-    }
-
     pub fn sign(&self, msg: &[u8]) -> Result<[u8; 64], SignError> {
         let pri_key: &SigningKey = match self {
             Ed25519Sign::PrivateKey(key) => key,
