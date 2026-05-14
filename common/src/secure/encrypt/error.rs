@@ -8,10 +8,12 @@
 
 #[derive(Debug, thiserror::Error)]
 pub enum EncryptError {
-    #[error("Aes invalid key length")]
-    AesInvalidLength,
-    #[error("Aes encrypt failed")]
-    AesEncryptFailed,
-    #[error("Aes authentication failed")]
-    AesAuthFailed,
+    #[error("Invalid key length")]
+    InvalidLength,
+    #[error("Encrypt failed")]
+    EncryptFailed,
+    #[error("Authentication failed")]
+    AuthFailed,
+    #[error("Wrong key type")]
+    KeyDisallow,
 }

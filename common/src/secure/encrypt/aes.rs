@@ -18,7 +18,7 @@ pub struct AesEncrypt {
 impl AesEncrypt {
     pub fn new(key: &[u8; 32], session_id: u32) -> Result<Self, EncryptError> {
         Ok(AesEncrypt {
-            aes: Aes256Gcm::new_from_slice(key).map_err(|_| EncryptError::AesInvalidLength)?,
+            aes: Aes256Gcm::new_from_slice(key).map_err(|_| EncryptError::InvalidLength)?,
             counter: 0u64,
             session_id,
         })
@@ -33,7 +33,7 @@ impl AesEncrypt {
         let ciphertext = self
             .aes
             .encrypt(&nonce.into(), data)
-            .map_err(|_| EncryptError::AesEncryptFailed)?;
+            .map_err(|_| EncryptError::EncryptFailed)?;
 
         let mut out = Vec::new();
         out.extend_from_slice(&nonce);
@@ -46,6 +46,6 @@ impl AesEncrypt {
         let (nonce, enc) = data.split_at(12);
         self.aes
             .decrypt(nonce.into(), enc)
-            .map_err(|_| EncryptError::AesAuthFailed)
+            .map_err(|_| EncryptError::AuthFailed)
     }
 }
