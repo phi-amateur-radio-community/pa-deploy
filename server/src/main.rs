@@ -7,6 +7,7 @@
 // Main of PA Deploy client.
 
 mod arg;
+mod conf;
 
 fn main() {
     arg::handle_cli();
