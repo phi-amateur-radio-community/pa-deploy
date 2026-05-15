@@ -13,6 +13,8 @@ use clap::{Arg, ArgAction, Command};
 pub enum ArgError {
     #[error("Configure error")]
     Config(#[from] ConfigError),
+    #[error("Missing path")]
+    MissingPath,
 }
 
 fn spawn_common_help(cmd: Command) -> Command {
@@ -59,7 +61,9 @@ pub fn handle_cli() -> Result<(), ArgError> {
     }
     match matches.subcommand() {
         Some(("config", sub_m)) => {
-            let path = sub_m.get_one::<String>("path").unwrap();
+            let path = sub_m
+                .get_one::<String>("path")
+                .ok_or(ArgError::MissingPath)?;
             let _config = Config::new(path)?;
             // TODO(config): Add tui to configured the server
         }
