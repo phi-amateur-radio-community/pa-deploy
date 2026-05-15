@@ -51,6 +51,8 @@ X-Nonce: <Nonce>
 
   If you want to encrypt the body, you must set it.
 
+  You can request `path: /encrypt-method` and used `GET` method to get the encrypt method list of server.
+
 ### Body Parameter
 
 - `wait_status: { false (default) | true }`
