@@ -3,12 +3,7 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /common/src/secure/encrypt/mod.rs
-// Encrypt module.
+// Path /common/src/secure/encrypt/rsa.rs
+// RSA encrypt.
 
-mod aes;
-pub mod common;
-mod error;
-mod rsa;
-
-pub use error::EncryptError;
+// TODO(rsa): RSA encryption support is temporarily abandoned due to the current complexity of the Rust RSA ecosystem and the availability of X25519 as a more modern alternative.

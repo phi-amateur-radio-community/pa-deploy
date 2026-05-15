@@ -16,4 +16,6 @@ pub enum EncryptError {
     AuthFailed,
     #[error("Wrong key type")]
     KeyDisallow,
+    #[error("This encrypt method is not surport")]
+    MethodDisable,
 }

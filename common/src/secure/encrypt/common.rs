@@ -11,7 +11,7 @@ use super::*;
 pub enum EncryptMethod {
     Unencrypt,
     OnlyAes(Box<aes::AesEncrypt>),
-    RsaAes,    // TODO(encrypt): RSA-OAEP + AES-256-GCM
+    RsaAes,    // Temporarily abandon
     X25519Aes, // TODO(encrypt): X25519 + AES-256-GCM
     X25519Cha, // TODO(encrypt): X25519 + ChaCha20-Poly1305
 }
@@ -19,7 +19,8 @@ pub enum EncryptMethod {
 pub enum EncryptKey {
     NoneKey,
     AesKey([u8; 32], u32),
-    RsaKey,
+    RsaPriKey, // Temporarily abandon
+    RsaPubKey, // Temporarily abandon
     X25519AesKey,
     X25519ChaKey,
 }
@@ -31,6 +32,8 @@ impl EncryptMethod {
             EncryptKey::AesKey(key, session_id) => {
                 EncryptMethod::OnlyAes(Box::new(aes::AesEncrypt::new(&key, session_id)?))
             }
+            EncryptKey::RsaPriKey => return Err(EncryptError::MethodDisable),
+            EncryptKey::RsaPubKey => return Err(EncryptError::MethodDisable),
             _ => EncryptMethod::Unencrypt,
         })
     }
@@ -39,6 +42,7 @@ impl EncryptMethod {
         match self {
             EncryptMethod::Unencrypt => Ok(msg.to_vec()),
             EncryptMethod::OnlyAes(encrypt) => encrypt.encrypt(msg),
+            EncryptMethod::RsaAes => Err(EncryptError::MethodDisable),
             _ => Ok(Vec::<u8>::new()),
         }
     }
@@ -47,6 +51,7 @@ impl EncryptMethod {
         match self {
             EncryptMethod::Unencrypt => Ok(msg.to_vec()),
             EncryptMethod::OnlyAes(encrypt) => encrypt.decrypt(msg),
+            EncryptMethod::RsaAes => Err(EncryptError::MethodDisable),
             _ => Ok(Vec::<u8>::new()),
         }
     }
