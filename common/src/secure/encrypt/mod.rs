@@ -7,8 +7,7 @@
 // Encrypt module.
 
 mod aes;
-pub mod common;
 mod error;
-mod rsa;
 
+pub use aes::AesEncrypt;
 pub use error::EncryptError;
