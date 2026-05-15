@@ -6,7 +6,14 @@
 // Path /server/src/arg.rs
 // Handle command.
 
+use crate::conf::{Config, ConfigError};
 use clap::{Arg, ArgAction, Command};
+
+#[derive(Debug, thiserror::Error)]
+pub enum ArgError {
+    #[error("Configure error")]
+    Config(#[from] ConfigError),
+}
 
 fn spawn_common_help(cmd: Command) -> Command {
     cmd
@@ -41,22 +48,24 @@ fn build_cli() -> Command {
     )
 }
 
-pub fn handle_cli() {
+pub fn handle_cli() -> Result<(), ArgError> {
     let matches = build_cli().get_matches();
     if matches.get_flag("version") {
         println!(
             "PA Deploy Client {}\nCopyright (c) 2026 Phiarc Team and St Rangeset\nLicensed under the GPLv3 or later License.",
             env!("CARGO_PKG_VERSION")
         );
-        return;
+        return Ok(());
     }
     match matches.subcommand() {
         Some(("config", sub_m)) => {
-            let _path = sub_m.get_one::<String>("path").unwrap();
-            // TODO: Handle configuare
+            let path = sub_m.get_one::<String>("path").unwrap();
+            let _config = Config::new(path)?;
+            // TODO(config): Add tui to configured the server
         }
         _ => {
             println!("[config]: Unknown Arg");
         }
     }
+    Ok(())
 }

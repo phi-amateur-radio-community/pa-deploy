@@ -10,5 +10,5 @@ mod arg;
 mod conf;
 
 fn main() {
-    arg::handle_cli();
+    let _ = arg::handle_cli();
 }
