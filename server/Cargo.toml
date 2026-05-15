@@ -8,3 +8,6 @@ amux = "0.1.3"
 clap = "4.6.1"
 
 common = { workspace = true }
+serde = { version = "1.0.228", features = ["derive"] }
+thiserror = "2.0.18"
+toml = "1.1.2"
