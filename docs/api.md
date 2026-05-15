@@ -47,11 +47,9 @@ X-Nonce: <Nonce>
 
 ***
 
-- `Encrypted: { none (default) | aes256 | x25519-aes256 | x25519-cha }`
+- `Encrypted: { none (default) | aes256 }`
 
   If you want to encrypt the body, you must set it.
-
-  You can request `path: /encrypt-method` and used `GET` method to get the encrypt method list of server.
 
 ### Body Parameter
 
