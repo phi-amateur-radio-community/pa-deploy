@@ -26,10 +26,12 @@ struct ConfigServer {
 #[allow(unused)]
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
-    #[error("Read file error")]
-    FileError(#[from] std::io::Error),
+    #[error("IO error")]
+    Io(#[from] std::io::Error),
     #[error("Deserialize error")]
-    DeserializeError(#[from] toml::de::Error),
+    Deserialize(#[from] toml::de::Error),
+    #[error("Serialize error")]
+    Serialize(#[from] toml::ser::Error),
 }
 
 #[allow(unused)]
@@ -43,5 +45,11 @@ impl Config {
                 server: HashMap::<String, ConfigServer>::new(),
             }
         })
+    }
+
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<(), ConfigError> {
+        let text = toml::to_string_pretty(self)?;
+        fs::write(path.as_ref(), text)?;
+        Ok(())
     }
 }
