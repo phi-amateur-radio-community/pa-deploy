@@ -47,7 +47,7 @@ X-Nonce: <Nonce>
 
 ***
 
-- `Encrypted: { none (default) | aes256 | rsa-aes256 | x25519-aes256 | x25519-cha }`
+- `Encrypted: { none (default) | aes256 | x25519-aes256 | x25519-cha }`
 
   If you want to encrypt the body, you must set it.
 
