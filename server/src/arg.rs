@@ -6,7 +6,10 @@
 // Path /server/src/arg.rs
 // Handle command.
 
-use crate::conf::{Config, ConfigError};
+use crate::{
+    conf::{Config, ConfigError},
+    ui,
+};
 use clap::{Arg, ArgAction, Command};
 
 #[derive(Debug, thiserror::Error)]
@@ -64,7 +67,8 @@ pub fn handle_cli() -> Result<(), ArgError> {
             let path = sub_m
                 .get_one::<String>("path")
                 .ok_or(ArgError::MissingPath)?;
-            let _config = Config::new(path)?;
+            let mut config = Config::new(path)?;
+            let _ = ui::config(&mut config);
             // TODO(config): Add tui to configured the server
         }
         _ => {

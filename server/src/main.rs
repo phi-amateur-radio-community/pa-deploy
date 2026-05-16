@@ -8,6 +8,7 @@
 
 mod arg;
 mod conf;
+mod ui;
 
 fn main() {
     let _ = arg::handle_cli();
