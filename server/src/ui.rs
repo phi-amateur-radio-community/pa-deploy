@@ -62,9 +62,13 @@ pub fn config(_config: &mut Config) -> Result<(), UiError> {
 
         if event::poll(std::time::Duration::from_millis(50))?
             && let Event::Key(key) = event::read()?
-            && key.code == KeyCode::Char('q')
         {
-            break;
+            match key.code {
+                KeyCode::Char('q') => break,
+                KeyCode::Char('c') => continue, // TODO(ui): add create new configure server.
+                KeyCode::Char('r') => continue, // TODO(ui): add remove new configure server.
+                _ => continue,
+            }
         }
     }
 
