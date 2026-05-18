@@ -53,7 +53,29 @@ impl Config {
         Ok(())
     }
 
-    pub fn get_map(&mut self) -> &mut IndexMap<String, ConfigServer> {
+    pub fn get_map(&self) -> &IndexMap<String, ConfigServer> {
+        &self.server
+    }
+
+    pub fn get_map_mut(&mut self) -> &mut IndexMap<String, ConfigServer> {
         &mut self.server
+    }
+}
+
+#[allow(unused)]
+impl ConfigServer {
+    pub fn new() -> Self {
+        ConfigServer {
+            ports: Vec::<u16>::new(),
+            bind: String::new(),
+        }
+    }
+
+    pub fn get_ports(&mut self) -> &mut Vec<u16> {
+        &mut self.ports
+    }
+
+    pub fn get_bind(&mut self) -> &mut String {
+        &mut self.bind
     }
 }

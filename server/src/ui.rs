@@ -6,7 +6,7 @@
 // Path /server/src/ui.rs
 // TUI
 
-use crate::conf::Config;
+use crate::conf::{Config, ConfigServer};
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
@@ -131,8 +131,12 @@ impl ScreenData {
         }
     }
 
-    fn remove(self) -> Config {
-        self.config.remove()
+    fn get_config(&mut self) -> &mut ConfigData {
+        &mut self.config
+    }
+
+    fn free(self) -> Config {
+        self.config.free()
     }
 }
 
@@ -143,7 +147,27 @@ impl ConfigData {
         ConfigData { config, ptr }
     }
 
-    fn remove(self) -> Config {
+    fn get_server(&self) -> Option<&ConfigServer> {
+        let (_, server) = self.config.get_map().get_index(self.ptr)?;
+        Some(server)
+    }
+
+    fn create(&mut self) {
+        let map = self.config.get_map_mut();
+        map.insert_before(self.ptr, String::new(), ConfigServer::new());
+    }
+
+    fn edit(&mut self, config: ConfigServer) {
+        let map = self.config.get_map_mut();
+        map.insert_before(self.ptr, String::new(), config);
+    }
+
+    fn delete(&mut self) {
+        let map = self.config.get_map_mut();
+        map.shift_remove_index(self.ptr);
+    }
+
+    fn free(self) -> Config {
         self.config
     }
 }
