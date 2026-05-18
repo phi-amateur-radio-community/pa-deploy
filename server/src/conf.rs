@@ -6,19 +6,19 @@
 // Path /server/src/conf.rs
 // Manage configuration.
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
 #[allow(unused)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
-    server: HashMap<String, ConfigServer>,
+    server: IndexMap<String, ConfigServer>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct ConfigServer {
+pub struct ConfigServer {
     ports: Vec<u16>,
     bind: String,
 }
@@ -42,7 +42,7 @@ impl Config {
             toml::from_str(&file)?
         } else {
             Config {
-                server: HashMap::<String, ConfigServer>::new(),
+                server: IndexMap::<String, ConfigServer>::new(),
             }
         })
     }
@@ -51,5 +51,9 @@ impl Config {
         let text = toml::to_string_pretty(self)?;
         fs::write(path.as_ref(), text)?;
         Ok(())
+    }
+
+    pub fn get_map(&mut self) -> &mut IndexMap<String, ConfigServer> {
+        &mut self.server
     }
 }
