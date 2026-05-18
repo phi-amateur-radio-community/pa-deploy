@@ -22,7 +22,14 @@ use ratatui::{
 use std::io;
 use std::rc::Rc;
 
-const FOOTER_CONTENT: [&str; 3] = ["Create [C]", "Quit [Q]", "Remove [R]"];
+const FOOTER_CONTENT: [&str; 6] = [
+    "Create [C]",
+    "Quit [Q]",
+    "Delete [D]",
+    "Rename [R]",
+    "Move [M]",
+    "Save [S]",
+];
 
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
@@ -66,7 +73,7 @@ pub fn config(_config: &mut Config) -> Result<(), UiError> {
             match key.code {
                 KeyCode::Char('q') => break,
                 KeyCode::Char('c') => continue, // TODO(ui): add create new configure server.
-                KeyCode::Char('r') => continue, // TODO(ui): add remove new configure server.
+                KeyCode::Char('d') => continue, // TODO(ui): add remove new configure server.
                 _ => continue,
             }
         }
@@ -90,4 +97,53 @@ fn render_footer(f: &mut Frame, contents: &[&str], area: Rect) -> Rc<[Rect]> {
         f.render_widget(&text, *location);
     }
     footer
+}
+
+#[allow(unused)]
+struct ScreenData {
+    status: ScreenStatus,
+    focus_index: Option<usize>,
+    config: ConfigData,
+}
+
+#[allow(unused)]
+enum ScreenStatus {
+    Move,
+    Input,
+}
+
+#[allow(unused)]
+struct ConfigData {
+    config: Config,
+    ptr: usize,
+}
+
+#[allow(unused)]
+impl ScreenData {
+    fn new(config: Config) -> Self {
+        let status = ScreenStatus::Move;
+        let focus_index = None;
+        let config = ConfigData::new(config);
+        ScreenData {
+            status,
+            focus_index,
+            config,
+        }
+    }
+
+    fn remove(self) -> Config {
+        self.config.remove()
+    }
+}
+
+#[allow(unused)]
+impl ConfigData {
+    fn new(config: Config) -> Self {
+        let ptr = 0;
+        ConfigData { config, ptr }
+    }
+
+    fn remove(self) -> Config {
+        self.config
+    }
 }
