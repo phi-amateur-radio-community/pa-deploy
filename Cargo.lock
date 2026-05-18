@@ -1715,6 +1715,7 @@ dependencies = [
  "amux",
  "clap",
  "common",
+ "indexmap",
  "ratatui",
  "serde",
  "thiserror 2.0.18",
