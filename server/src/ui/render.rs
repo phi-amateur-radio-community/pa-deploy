@@ -3,10 +3,11 @@
 // Licensed under the GNU General Public License Version 3.0 or later
 // https://github.com/phi-amateur-radio-community/pa-deploy
 // =====================================================================
-// Path /server/src/ui.rs
-// TUI
+// Path /server/src/ui/render.rs
+// Render for TUI
 
-use crate::conf::{Config, ConfigServer};
+use super::UiError;
+use crate::conf::Config;
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
@@ -19,8 +20,7 @@ use ratatui::{
     text::Line,
     widgets::{Block, Borders, Paragraph},
 };
-use std::io;
-use std::rc::Rc;
+use std::{io, rc::Rc};
 
 const FOOTER_CONTENT: [&str; 6] = [
     "Create [C]",
@@ -30,12 +30,6 @@ const FOOTER_CONTENT: [&str; 6] = [
     "Move [M]",
     "Save [S]",
 ];
-
-#[derive(Debug, thiserror::Error)]
-pub enum UiError {
-    #[error("IO error")]
-    Io(#[from] std::io::Error),
-}
 
 pub fn config(_config: &mut Config) -> Result<(), UiError> {
     enable_raw_mode()?;
@@ -97,77 +91,4 @@ fn render_footer(f: &mut Frame, contents: &[&str], area: Rect) -> Rc<[Rect]> {
         f.render_widget(&text, *location);
     }
     footer
-}
-
-#[allow(unused)]
-struct ScreenData {
-    status: ScreenStatus,
-    focus_index: Option<usize>,
-    config: ConfigData,
-}
-
-#[allow(unused)]
-enum ScreenStatus {
-    Move,
-    Input,
-}
-
-#[allow(unused)]
-struct ConfigData {
-    config: Config,
-    ptr: usize,
-}
-
-#[allow(unused)]
-impl ScreenData {
-    fn new(config: Config) -> Self {
-        let status = ScreenStatus::Move;
-        let focus_index = None;
-        let config = ConfigData::new(config);
-        ScreenData {
-            status,
-            focus_index,
-            config,
-        }
-    }
-
-    fn get_config(&mut self) -> &mut ConfigData {
-        &mut self.config
-    }
-
-    fn free(self) -> Config {
-        self.config.free()
-    }
-}
-
-#[allow(unused)]
-impl ConfigData {
-    fn new(config: Config) -> Self {
-        let ptr = 0;
-        ConfigData { config, ptr }
-    }
-
-    fn get_server(&self) -> Option<&ConfigServer> {
-        let (_, server) = self.config.get_map().get_index(self.ptr)?;
-        Some(server)
-    }
-
-    fn create(&mut self) {
-        let map = self.config.get_map_mut();
-        map.insert_before(self.ptr, String::new(), ConfigServer::new());
-    }
-
-    fn edit(&mut self, config: ConfigServer) {
-        let map = self.config.get_map_mut();
-        map.insert_before(self.ptr, String::new(), config);
-    }
-
-    fn delete(&mut self) {
-        let map = self.config.get_map_mut();
-        map.shift_remove_index(self.ptr);
-    }
-
-    fn free(self) -> Config {
-        self.config
-    }
 }
