@@ -33,19 +33,30 @@ const FOOTER_CONTENT: [&str; 6] = [
 ];
 
 #[allow(unused)]
-const STYLE_COMMON: Style = Style::new().bg(Color::Black).fg(Color::White);
+pub enum ExplorerStyle {
+    Common,
+    Focus,
+    Input,
+    Error,
+}
+
 #[allow(unused)]
-const STYLE_FOCUS: Style = Style::new().bg(Color::White).fg(Color::Black);
-#[allow(unused)]
-const STYLE_INPUT: Style = Style::new()
-    .bg(Color::Black)
-    .fg(Color::White)
-    .add_modifier(Modifier::BOLD);
-#[allow(unused)]
-const STYLE_ERROR: Style = Style::new()
-    .bg(Color::Black)
-    .fg(Color::Red)
-    .add_modifier(Modifier::BOLD);
+impl ExplorerStyle {
+    pub fn get_color(&self) -> Style {
+        match self {
+            ExplorerStyle::Common => Style::new().bg(Color::Black).fg(Color::White),
+            ExplorerStyle::Focus => Style::new().bg(Color::White).fg(Color::Black),
+            ExplorerStyle::Input => Style::new()
+                .bg(Color::Black)
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+            ExplorerStyle::Error => Style::new()
+                .bg(Color::Black)
+                .fg(Color::Red)
+                .add_modifier(Modifier::BOLD),
+        }
+    }
+}
 
 pub fn config(_config: &mut Config) -> Result<(), UiError> {
     enable_raw_mode()?;
@@ -114,7 +125,7 @@ fn render_footer(f: &mut Frame, contents: &[&str], area: Rect) -> Rc<[Rect]> {
     footer
 }
 
-pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, _is_focus: bool) {
-    let text = Paragraph::new(name).style(STYLE_COMMON);
+pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, style: ExplorerStyle) {
+    let text = Paragraph::new(name).style(style.get_color());
     f.render_widget(text, area);
 }

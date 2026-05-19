@@ -108,7 +108,7 @@ impl ConfigData {
                 Some(item) => item,
                 None => break,
             };
-            render::render_explorer_item(f, areas[i], key, i == self.ptr);
+            render::render_explorer_item(f, areas[i], key, render::ExplorerStyle::Common);
         }
     }
 }
