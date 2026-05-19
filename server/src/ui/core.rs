@@ -6,12 +6,19 @@
 // Path /server/src/ui/core.rs
 // Structure and enum definition of TUI.
 
-use super::render;
+use super::render::*;
 use crate::conf::{Config, ConfigServer};
 use ratatui::{
-    Frame,
+    Frame, Terminal,
+    backend::CrosstermBackend,
+    crossterm::{
+        event::{self, Event, KeyCode},
+        execute,
+        terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    },
     layout::{Constraint, Direction, Layout, Rect},
 };
+use std::io;
 
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
@@ -20,7 +27,7 @@ pub enum UiError {
 }
 
 #[allow(unused)]
-struct ScreenData {
+pub struct ScreenData {
     status: ScreenStatus,
     focus_index: Option<usize>,
     config: ConfigData,
@@ -32,7 +39,6 @@ enum ScreenStatus {
     Input,
 }
 
-#[allow(unused)]
 struct ConfigData {
     config: Config,
     ptr: usize,
@@ -40,7 +46,7 @@ struct ConfigData {
 
 #[allow(unused)]
 impl ScreenData {
-    fn new(config: Config) -> Self {
+    pub fn new(config: Config) -> Self {
         let status = ScreenStatus::Move;
         let focus_index = None;
         let config = ConfigData::new(config);
@@ -49,6 +55,50 @@ impl ScreenData {
             focus_index,
             config,
         }
+    }
+
+    pub fn display(&mut self) -> Result<(), UiError> {
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        let _ = execute!(stdout, EnterAlternateScreen);
+        let backend = CrosstermBackend::new(stdout);
+        let mut terminal = Terminal::new(backend)?;
+
+        loop {
+            terminal.draw(|f| {
+                let area = f.area();
+
+                let [body, footer] =
+                    Layout::vertical([Constraint::Min(0), Constraint::Length(3)]).areas(area);
+
+                let body = render_header(f, body);
+
+                {
+                    let [explorer, _detail] =
+                        Layout::horizontal([Constraint::Length(24), Constraint::Fill(1)])
+                            .areas(body);
+                    let explorer = render_line(f, explorer);
+                }
+
+                let _ = render_footer(f, FooterMode::Explorer, footer);
+            })?;
+
+            if event::poll(std::time::Duration::from_millis(50))?
+                && let Event::Key(key) = event::read()?
+            {
+                match key.code {
+                    KeyCode::Char('q') => break,
+                    KeyCode::Char('c') => continue, // TODO(ui): add create new configure server.
+                    KeyCode::Char('d') => continue, // TODO(ui): add remove new configure server.
+                    _ => continue,
+                }
+            }
+        }
+
+        disable_raw_mode()?;
+        execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+
+        Ok(())
     }
 
     fn get_config(&self) -> &ConfigData {
@@ -108,7 +158,7 @@ impl ConfigData {
                 Some(item) => item,
                 None => break,
             };
-            render::render_explorer_item(f, areas[i], key, render::ExplorerStyle::Common);
+            render_explorer_item(f, areas[i], key, ExplorerStyle::Common);
         }
     }
 }

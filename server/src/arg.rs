@@ -18,6 +18,8 @@ pub enum ArgError {
     Config(#[from] ConfigError),
     #[error("Missing path")]
     MissingPath,
+    #[error("Ui error")]
+    Ui(#[from] ui::UiError),
 }
 
 fn spawn_common_help(cmd: Command) -> Command {
@@ -67,8 +69,9 @@ pub fn handle_cli() -> Result<(), ArgError> {
             let path = sub_m
                 .get_one::<String>("path")
                 .ok_or(ArgError::MissingPath)?;
-            let mut config = Config::new(path)?;
-            let _ = ui::config(&mut config);
+            let config = Config::new(path)?;
+            let mut screen = ui::ScreenData::new(config);
+            screen.display()?
             // TODO(config): Add tui to configured the server
         }
         _ => {

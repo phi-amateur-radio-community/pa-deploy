@@ -9,5 +9,4 @@
 mod core;
 mod render;
 
-pub use core::UiError;
-pub use render::config;
+pub use core::{ScreenData, UiError};
