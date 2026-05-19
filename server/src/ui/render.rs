@@ -42,10 +42,8 @@ pub fn config(_config: &mut Config) -> Result<(), UiError> {
         terminal.draw(|f| {
             let area = f.area();
 
-            let screen = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Min(0), Constraint::Length(3)])
-                .split(area);
+            let [body, footer] =
+                Layout::vertical([Constraint::Min(0), Constraint::Length(3)]).areas(area);
 
             let title = format!(
                 "PA Deploy Client Configuration Manager Version {}",
@@ -54,11 +52,15 @@ pub fn config(_config: &mut Config) -> Result<(), UiError> {
             let title_block = Block::new()
                 .borders(Borders::ALL)
                 .title(Line::raw(title).alignment(Alignment::Center));
-            f.render_widget(&title_block, screen[0]);
+            f.render_widget(&title_block, body);
 
-            let _ = render_footer(f, &FOOTER_CONTENT, screen[1]);
+            let _ = render_footer(f, &FOOTER_CONTENT, footer);
 
-            let _inner = title_block.inner(screen[0]);
+            let body = title_block.inner(body);
+
+            let [explorer, _detail] =
+                Layout::horizontal([Constraint::Length(24), Constraint::Fill(1)]).areas(body);
+            f.render_widget(Block::default().borders(Borders::RIGHT), explorer);
         })?;
 
         if event::poll(std::time::Duration::from_millis(50))?
