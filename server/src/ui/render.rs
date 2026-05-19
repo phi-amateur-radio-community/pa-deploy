@@ -45,22 +45,25 @@ pub fn config(_config: &mut Config) -> Result<(), UiError> {
             let [body, footer] =
                 Layout::vertical([Constraint::Min(0), Constraint::Length(3)]).areas(area);
 
-            let title = format!(
-                "PA Deploy Client Configuration Manager Version {}",
-                env!("CARGO_PKG_VERSION")
-            );
-            let title_block = Block::new()
-                .borders(Borders::ALL)
-                .title(Line::raw(title).alignment(Alignment::Center));
-            f.render_widget(&title_block, body);
+            let body = {
+                let title = format!(
+                    "PA Deploy Client Configuration Manager Version {}",
+                    env!("CARGO_PKG_VERSION")
+                );
+                let title_block = Block::new()
+                    .borders(Borders::ALL)
+                    .title(Line::raw(title).alignment(Alignment::Center));
+                f.render_widget(&title_block, body);
+                title_block.inner(body)
+            };
+
+            {
+                let [explorer, _detail] =
+                    Layout::horizontal([Constraint::Length(24), Constraint::Fill(1)]).areas(body);
+                f.render_widget(Block::default().borders(Borders::RIGHT), explorer);
+            }
 
             let _ = render_footer(f, &FOOTER_CONTENT, footer);
-
-            let body = title_block.inner(body);
-
-            let [explorer, _detail] =
-                Layout::horizontal([Constraint::Length(24), Constraint::Fill(1)]).areas(body);
-            f.render_widget(Block::default().borders(Borders::RIGHT), explorer);
         })?;
 
         if event::poll(std::time::Duration::from_millis(50))?
