@@ -6,7 +6,12 @@
 // Path /server/src/ui/core.rs
 // Structure and enum definition of TUI.
 
+use super::render;
 use crate::conf::{Config, ConfigServer};
+use ratatui::{
+    Frame,
+    layout::{Constraint, Direction, Layout, Rect},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
@@ -46,7 +51,11 @@ impl ScreenData {
         }
     }
 
-    fn get_config(&mut self) -> &mut ConfigData {
+    fn get_config(&self) -> &ConfigData {
+        &self.config
+    }
+
+    fn get_config_mut(&mut self) -> &mut ConfigData {
         &mut self.config
     }
 
@@ -84,5 +93,22 @@ impl ConfigData {
 
     fn free(self) -> Config {
         self.config
+    }
+
+    fn render(&self, f: &mut Frame, area: Rect, status: ScreenStatus) {
+        let items = self.config.get_map();
+        let size = items.len();
+        let constraints = vec![Constraint::Fill(1); size];
+        let areas = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(constraints)
+            .split(area);
+        for i in 0..size {
+            let (key, _) = match items.get_index(i) {
+                Some(item) => item,
+                None => break,
+            };
+            render::render_explorer_item(f, areas[i], key, i == self.ptr);
+        }
     }
 }

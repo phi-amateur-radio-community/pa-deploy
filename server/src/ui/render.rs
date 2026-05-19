@@ -17,6 +17,7 @@ use ratatui::{
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
     text::Line,
     widgets::{Block, Borders, Paragraph},
 };
@@ -30,6 +31,21 @@ const FOOTER_CONTENT: [&str; 6] = [
     "Move [M]",
     "Save [S]",
 ];
+
+#[allow(unused)]
+const STYLE_COMMON: Style = Style::new().bg(Color::Black).fg(Color::White);
+#[allow(unused)]
+const STYLE_FOCUS: Style = Style::new().bg(Color::White).fg(Color::Black);
+#[allow(unused)]
+const STYLE_INPUT: Style = Style::new()
+    .bg(Color::Black)
+    .fg(Color::White)
+    .add_modifier(Modifier::BOLD);
+#[allow(unused)]
+const STYLE_ERROR: Style = Style::new()
+    .bg(Color::Black)
+    .fg(Color::Red)
+    .add_modifier(Modifier::BOLD);
 
 pub fn config(_config: &mut Config) -> Result<(), UiError> {
     enable_raw_mode()?;
@@ -96,4 +112,9 @@ fn render_footer(f: &mut Frame, contents: &[&str], area: Rect) -> Rc<[Rect]> {
         f.render_widget(&text, *location);
     }
     footer
+}
+
+pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, _is_focus: bool) {
+    let text = Paragraph::new(name).style(STYLE_COMMON);
+    f.render_widget(text, area);
 }
