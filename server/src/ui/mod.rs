@@ -7,6 +7,7 @@
 // TUI module.
 
 mod core;
+mod keyboard;
 mod render;
 
 pub use core::{ScreenData, UiError};

@@ -71,8 +71,9 @@ pub fn handle_cli() -> Result<(), ArgError> {
                 .ok_or(ArgError::MissingPath)?;
             let config = Config::new(path)?;
             let mut screen = ui::ScreenData::new(config);
-            screen.display()?
-            // TODO(config): Add tui to configured the server
+            screen.display()?;
+            let config = screen.free();
+            config.save(path)?;
         }
         _ => {
             println!("[config]: Unknown Arg");

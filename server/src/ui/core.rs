@@ -6,13 +6,16 @@
 // Path /server/src/ui/core.rs
 // Structure and enum definition of TUI.
 
-use super::render::*;
+use super::{
+    keyboard::{HandlerStatus, handler_keyboard},
+    render::*,
+};
 use crate::conf::{Config, ConfigServer};
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
     crossterm::{
-        event::{self, Event, KeyCode},
+        event::{self, Event},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
@@ -39,7 +42,7 @@ enum ScreenStatus {
     Input,
 }
 
-struct ConfigData {
+pub struct ConfigData {
     config: Config,
     ptr: usize,
 }
@@ -88,11 +91,9 @@ impl ScreenData {
             if event::poll(std::time::Duration::from_millis(50))?
                 && let Event::Key(key) = event::read()?
             {
-                match key.code {
-                    KeyCode::Char('q') => break,
-                    KeyCode::Char('c') => continue, // TODO(ui): add create new configure server.
-                    KeyCode::Char('d') => continue, // TODO(ui): add remove new configure server.
-                    _ => continue,
+                match handler_keyboard(self, key.code) {
+                    HandlerStatus::Break => break,
+                    HandlerStatus::Continue => continue,
                 }
             }
         }
@@ -103,15 +104,15 @@ impl ScreenData {
         Ok(())
     }
 
-    fn get_config(&self) -> &ConfigData {
+    pub fn get_config(&self) -> &ConfigData {
         &self.config
     }
 
-    fn get_config_mut(&mut self) -> &mut ConfigData {
+    pub fn get_config_mut(&mut self) -> &mut ConfigData {
         &mut self.config
     }
 
-    fn free(self) -> Config {
+    pub fn free(self) -> Config {
         self.config.free()
     }
 
@@ -140,12 +141,12 @@ impl ConfigData {
         ConfigData { config, ptr }
     }
 
-    fn get_server(&self) -> Option<&ConfigServer> {
+    pub fn get_server(&self) -> Option<&ConfigServer> {
         let (_, server) = self.config.get_map().get_index(self.ptr)?;
         Some(server)
     }
 
-    fn create(&mut self) {
+    pub fn create(&mut self) {
         let map = self.config.get_map_mut();
         map.insert_before(self.ptr, String::new(), ConfigServer::new());
     }
