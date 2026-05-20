@@ -78,6 +78,8 @@ impl ScreenData {
                         Layout::horizontal([Constraint::Length(24), Constraint::Fill(1)])
                             .areas(body);
                     let explorer = render_line(f, explorer);
+
+                    self.render(f, explorer);
                 }
 
                 let _ = render_footer(f, FooterMode::Explorer, footer);
@@ -112,6 +114,23 @@ impl ScreenData {
     fn free(self) -> Config {
         self.config.free()
     }
+
+    fn render(&self, f: &mut Frame, area: Rect) {
+        let items = self.config.config.get_map();
+        let size = items.len();
+        let constraints = vec![Constraint::Fill(1); size];
+        let areas = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(constraints)
+            .split(area);
+        for i in 0..size {
+            let (key, _) = match items.get_index(i) {
+                Some(item) => item,
+                None => break,
+            };
+            render_explorer_item(f, areas[i], key, ExplorerStyle::Common);
+        }
+    }
 }
 
 #[allow(unused)]
@@ -143,22 +162,5 @@ impl ConfigData {
 
     fn free(self) -> Config {
         self.config
-    }
-
-    fn render(&self, f: &mut Frame, area: Rect, status: ScreenStatus) {
-        let items = self.config.get_map();
-        let size = items.len();
-        let constraints = vec![Constraint::Fill(1); size];
-        let areas = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(constraints)
-            .split(area);
-        for i in 0..size {
-            let (key, _) = match items.get_index(i) {
-                Some(item) => item,
-                None => break,
-            };
-            render_explorer_item(f, areas[i], key, ExplorerStyle::Common);
-        }
     }
 }
