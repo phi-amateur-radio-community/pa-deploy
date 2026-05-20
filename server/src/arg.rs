@@ -30,7 +30,7 @@ fn spawn_common_help(cmd: Command) -> Command {
 
 fn build_cli() -> Command {
     spawn_common_help(
-        Command::new("Ans")
+        Command::new("PA Deploy Client Configure Manager")
             .version(env!("CARGO_PKG_VERSION"))
             .author(env!("CARGO_PKG_AUTHORS"))
             .about("PA Deploy Client")
