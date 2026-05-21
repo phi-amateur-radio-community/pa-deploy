@@ -12,7 +12,7 @@ use crate::{
     ui,
 };
 use clap::{Arg, ArgAction, Command};
-use tracing::error;
+use tracing::{error, info};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ArgError {
@@ -125,6 +125,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
         }
     };
     init_log(log_level, log_mode)?;
+    info!(target: "arg", argv = ?std::env::args().collect::<Vec<_>>(), "exec");
     match matches.subcommand() {
         Some(("config", sub_m)) => {
             let path = sub_m
