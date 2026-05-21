@@ -17,7 +17,12 @@ pub enum LogLevel {
     Error,
 }
 
-pub fn init_log(level: LogLevel, path: Option<&String>) -> Result<(), std::io::Error> {
+pub enum LogMode<'a> {
+    File(&'a String),
+    Stdout,
+}
+
+pub fn init_log(level: LogLevel, mode: LogMode) -> Result<(), std::io::Error> {
     let level = match level {
         LogLevel::Trace => "trace",
         LogLevel::Debug => "debug",
@@ -26,15 +31,15 @@ pub fn init_log(level: LogLevel, path: Option<&String>) -> Result<(), std::io::E
         LogLevel::Error => "error",
     };
     let builder = tracing_subscriber::fmt().with_env_filter(level);
-    match path {
-        Some(path) => {
+    match mode {
+        LogMode::Stdout => builder.init(),
+        LogMode::File(path) => {
             if !Path::new(path).exists() {
                 create_dir_all(path)?;
             }
             let appender = rolling::daily(path, "pa-deploy.log");
             builder.with_writer(appender).init();
         }
-        None => builder.init(),
     };
     Ok(())
 }

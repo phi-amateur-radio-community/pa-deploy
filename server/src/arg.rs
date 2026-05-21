@@ -8,7 +8,7 @@
 
 use crate::{
     conf::{Config, ConfigError},
-    log::{LogLevel, init_log},
+    log::{LogLevel, LogMode, init_log},
     ui,
 };
 use clap::{Arg, ArgAction, Command};
@@ -55,10 +55,11 @@ fn build_cli() -> Command {
                     .value_name("LOG_LEVEL"),
             )
             .arg(
-                Arg::new("log-save")
-                    .long("enable-save-log-file")
-                    .help("Enable saving logs to file")
-                    .action(ArgAction::SetTrue),
+                Arg::new("log-mode")
+                    .long("log-mode")
+                    .help("Log out mode: stdout | file")
+                    .default_value("stdout")
+                    .value_name("LOG_OUT_MODE"),
             )
             .arg(
                 Arg::new("log-path")
@@ -105,12 +106,24 @@ pub fn handle_cli() -> Result<(), ArgError> {
             return Ok(());
         }
     };
-    let save_path = if matches.get_flag("log-save") {
-        matches.get_one::<String>("log-path")
-    } else {
-        None
+    let log_mode = match matches
+        .get_one::<String>("log-mode")
+        .ok_or(ArgError::Unknown)?
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "stdout" => LogMode::Stdout,
+        "path" => LogMode::File(
+            matches
+                .get_one::<String>("log-mode")
+                .ok_or(ArgError::Unknown)?,
+        ),
+        _ => {
+            println!("[config]: Unknown log level");
+            return Ok(());
+        }
     };
-    init_log(log_level, save_path)?;
+    init_log(log_level, log_mode)?;
     match matches.subcommand() {
         Some(("config", sub_m)) => {
             let path = sub_m
