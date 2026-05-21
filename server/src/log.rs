@@ -6,6 +6,9 @@
 // Path /server/src/log.rs
 // Logger
 
+use std::{fs::create_dir_all, path::Path};
+use tracing_appender::rolling;
+
 pub enum LogLevel {
     Trace,
     Debug,
@@ -14,7 +17,7 @@ pub enum LogLevel {
     Error,
 }
 
-pub fn init_log(level: LogLevel) -> Result<(), std::io::Error> {
+pub fn init_log(level: LogLevel, path: Option<&String>) -> Result<(), std::io::Error> {
     let level = match level {
         LogLevel::Trace => "trace",
         LogLevel::Debug => "debug",
@@ -22,9 +25,16 @@ pub fn init_log(level: LogLevel) -> Result<(), std::io::Error> {
         LogLevel::Warning => "warning",
         LogLevel::Error => "error",
     };
-    tracing_subscriber::fmt()
-        .with_writer(std::fs::File::create("pa-deploy.log")?)
-        .with_env_filter(level)
-        .init();
+    let builder = tracing_subscriber::fmt().with_env_filter(level);
+    match path {
+        Some(path) => {
+            if !Path::new(path).exists() {
+                create_dir_all(path)?;
+            }
+            let appender = rolling::daily(path, "pa-deploy.log");
+            builder.with_writer(appender).init();
+        }
+        None => builder.init(),
+    };
     Ok(())
 }

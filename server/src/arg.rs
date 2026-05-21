@@ -54,6 +54,19 @@ fn build_cli() -> Command {
                     .default_value("INFO")
                     .value_name("LOG_LEVEL"),
             )
+            .arg(
+                Arg::new("log-save")
+                    .long("enable-save-log-file")
+                    .help("Enable saving logs to file")
+                    .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("log-path")
+                    .long("log-path")
+                    .help("Set the path to save the log file")
+                    .default_value("/var/log/pa-deploy")
+                    .value_name("LOG_PATH"),
+            )
             .subcommand(
                 Command::new("config")
                     .about("Manage configuration files and options")
@@ -92,7 +105,12 @@ pub fn handle_cli() -> Result<(), ArgError> {
             return Ok(());
         }
     };
-    init_log(log_level)?;
+    let save_path = if matches.get_flag("log-save") {
+        matches.get_one::<String>("log-path")
+    } else {
+        None
+    };
+    init_log(log_level, save_path)?;
     match matches.subcommand() {
         Some(("config", sub_m)) => {
             let path = sub_m
