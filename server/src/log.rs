@@ -7,6 +7,7 @@
 // Logger
 
 use std::{fs::create_dir_all, path::Path};
+use tracing::info;
 use tracing_appender::rolling;
 
 pub enum LogLevel {
@@ -41,5 +42,6 @@ pub fn init_log(level: LogLevel, mode: LogMode) -> Result<(), std::io::Error> {
             builder.with_writer(appender).init();
         }
     };
+    info!(target: "log", "Initialzation successful");
     Ok(())
 }

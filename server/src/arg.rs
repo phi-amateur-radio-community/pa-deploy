@@ -12,6 +12,7 @@ use crate::{
     ui,
 };
 use clap::{Arg, ArgAction, Command};
+use tracing::error;
 
 #[derive(Debug, thiserror::Error)]
 pub enum ArgError {
@@ -101,8 +102,8 @@ pub fn handle_cli() -> Result<(), ArgError> {
         "INFO" => LogLevel::Info,
         "WARNING" => LogLevel::Warning,
         "ERROR" => LogLevel::Error,
-        _ => {
-            println!("[config]: Unknown log level");
+        msg => {
+            eprintln!("[arg] Unknown log level: {}", msg);
             return Ok(());
         }
     };
@@ -118,8 +119,8 @@ pub fn handle_cli() -> Result<(), ArgError> {
                 .get_one::<String>("log-mode")
                 .ok_or(ArgError::Unknown)?,
         ),
-        _ => {
-            println!("[config]: Unknown log mode");
+        msg => {
+            eprintln!("[arg] Unknown log mode: {}", msg);
             return Ok(());
         }
     };
@@ -136,7 +137,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
             config.save(path)?;
         }
         _ => {
-            println!("[config]: Unknown Arg");
+            error!(target: "arg", "Unknown Command");
         }
     }
     Ok(())
