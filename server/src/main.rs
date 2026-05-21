@@ -8,6 +8,7 @@
 
 mod arg;
 mod conf;
+mod log;
 mod ui;
 
 fn main() {

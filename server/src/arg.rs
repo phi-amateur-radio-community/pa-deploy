@@ -8,6 +8,7 @@
 
 use crate::{
     conf::{Config, ConfigError},
+    log::{LogLevel, init_log},
     ui,
 };
 use clap::{Arg, ArgAction, Command};
@@ -18,8 +19,12 @@ pub enum ArgError {
     Config(#[from] ConfigError),
     #[error("Missing path")]
     MissingPath,
+    #[error("Unknown error")]
+    Unknown,
     #[error("Ui error")]
     Ui(#[from] ui::UiError),
+    #[error("IO error")]
+    Io(#[from] std::io::Error),
 }
 
 fn spawn_common_help(cmd: Command) -> Command {
@@ -41,6 +46,13 @@ fn build_cli() -> Command {
                     .short('V')
                     .help("Show version information")
                     .action(ArgAction::SetTrue),
+            )
+            .arg(
+                Arg::new("log-level")
+                    .long("log-level")
+                    .help("Log level: TRACE | DEBUG | INFO | WARNING | ERROR")
+                    .default_value("INFO")
+                    .value_name("LOG_LEVEL"),
             )
             .subcommand(
                 Command::new("config")
@@ -64,6 +76,23 @@ pub fn handle_cli() -> Result<(), ArgError> {
         );
         return Ok(());
     }
+    let log_level = match matches
+        .get_one::<String>("log-level")
+        .ok_or(ArgError::Unknown)?
+        .to_ascii_uppercase()
+        .as_str()
+    {
+        "TRACE" => LogLevel::Trace,
+        "DEBUG" => LogLevel::Debug,
+        "INFO" => LogLevel::Info,
+        "WARNING" => LogLevel::Warning,
+        "ERROR" => LogLevel::Error,
+        _ => {
+            println!("[config]: Unknown log level");
+            return Ok(());
+        }
+    };
+    init_log(log_level)?;
     match matches.subcommand() {
         Some(("config", sub_m)) => {
             let path = sub_m
