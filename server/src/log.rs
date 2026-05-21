@@ -23,7 +23,7 @@ pub enum LogMode<'a> {
     Stdout,
 }
 
-pub fn init_log(level: LogLevel, mode: LogMode) -> Result<(), std::io::Error> {
+pub fn init_log(level: &LogLevel, mode: &LogMode) -> Result<(), std::io::Error> {
     let level = match level {
         LogLevel::Trace => "trace",
         LogLevel::Debug => "debug",

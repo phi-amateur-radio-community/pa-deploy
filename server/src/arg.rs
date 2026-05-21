@@ -124,10 +124,14 @@ pub fn handle_cli() -> Result<(), ArgError> {
             return Ok(());
         }
     };
-    init_log(log_level, log_mode)?;
+    init_log(&log_level, &log_mode)?;
     info!(target: "arg", argv = ?std::env::args().collect::<Vec<_>>(), "exec");
     match matches.subcommand() {
         Some(("config", sub_m)) => {
+            if matches!(log_mode, LogMode::Stdout) {
+                error!(target: "arg", "Terminal UI is not supported stdout log mode");
+                return Ok(());
+            }
             let path = sub_m
                 .get_one::<String>("path")
                 .ok_or(ArgError::MissingPath)?;
@@ -138,7 +142,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
             config.save(path)?;
         }
         _ => {
-            error!(target: "arg", "Unknown Command");
+            error!(target: "arg", "Unknown command");
         }
     }
     Ok(())
