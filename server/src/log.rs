@@ -16,11 +16,13 @@ pub enum LogLevel {
     Info,
     Warning,
     Error,
+    None,
 }
 
 pub enum LogMode<'a> {
     File(&'a String),
     Stdout,
+    Disable,
 }
 
 pub fn init_log(level: &LogLevel, mode: &LogMode) -> Result<(), std::io::Error> {
@@ -30,9 +32,11 @@ pub fn init_log(level: &LogLevel, mode: &LogMode) -> Result<(), std::io::Error> 
         LogLevel::Info => "info",
         LogLevel::Warning => "warning",
         LogLevel::Error => "error",
+        LogLevel::None => return Ok(()),
     };
     let builder = tracing_subscriber::fmt().with_env_filter(level);
     match mode {
+        LogMode::Disable => return Ok(()),
         LogMode::Stdout => builder.init(),
         LogMode::File(path) => {
             if !Path::new(path).exists() {

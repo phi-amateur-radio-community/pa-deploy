@@ -51,14 +51,14 @@ fn build_cli() -> Command {
             .arg(
                 Arg::new("log-level")
                     .long("log-level")
-                    .help("Log level: TRACE | DEBUG | INFO | WARNING | ERROR")
+                    .help("Log level: TRACE | DEBUG | INFO | WARNING | ERROR | NONE")
                     .default_value("INFO")
                     .value_name("LOG_LEVEL"),
             )
             .arg(
                 Arg::new("log-mode")
                     .long("log-mode")
-                    .help("Log out mode: stdout | file")
+                    .help("Log out mode: stdout | file | disable")
                     .default_value("stdout")
                     .value_name("LOG_OUT_MODE"),
             )
@@ -102,6 +102,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
         "INFO" => LogLevel::Info,
         "WARNING" => LogLevel::Warning,
         "ERROR" => LogLevel::Error,
+        "NONE" => LogLevel::None,
         msg => {
             eprintln!("[arg] Unknown log level: {}", msg);
             return Ok(());
@@ -119,6 +120,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
                 .get_one::<String>("log-mode")
                 .ok_or(ArgError::Unknown)?,
         ),
+        "disable" => LogMode::Disable,
         msg => {
             eprintln!("[arg] Unknown log mode: {}", msg);
             return Ok(());
