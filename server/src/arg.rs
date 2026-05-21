@@ -119,7 +119,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
                 .ok_or(ArgError::Unknown)?,
         ),
         _ => {
-            println!("[config]: Unknown log level");
+            println!("[config]: Unknown log mode");
             return Ok(());
         }
     };
