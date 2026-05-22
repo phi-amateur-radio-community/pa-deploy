@@ -34,7 +34,9 @@ pub enum UiError {
 pub struct ScreenData {
     status: ScreenStatus,
     focus_index: Option<usize>,
-    config: ConfigData,
+    config: Config,
+    ptr: usize,
+    changed: bool,
 }
 
 #[allow(unused)]
@@ -45,23 +47,20 @@ pub enum ScreenStatus {
     Warning(&'static str),
 }
 
-pub struct ConfigData {
-    config: Config,
-    ptr: usize,
-    changed: bool,
-}
-
 #[allow(unused)]
 impl ScreenData {
     pub fn new(config: Config) -> Self {
         trace!(target: "ui/core", "Initialize ScreenData");
         let status = ScreenStatus::Move;
         let focus_index = None;
-        let config = ConfigData::new(config);
+        let ptr = 0;
+        let changed = false;
         ScreenData {
             status,
             focus_index,
             config,
+            ptr,
+            changed,
         }
     }
 
@@ -89,7 +88,7 @@ impl ScreenData {
                             .areas(body);
                     let explorer = render_line(f, explorer);
 
-                    self.render(f, explorer);
+                    self.render_detail(f, explorer);
                 }
 
                 let mode = match self.status {
@@ -128,20 +127,20 @@ impl ScreenData {
         &self.status
     }
 
-    pub fn get_config(&self) -> &ConfigData {
+    pub fn get_config(&self) -> &Config {
         &self.config
     }
 
-    pub fn get_config_mut(&mut self) -> &mut ConfigData {
+    pub fn get_config_mut(&mut self) -> &mut Config {
         &mut self.config
     }
 
     pub fn free(self) -> Config {
-        self.config.free()
+        self.config
     }
 
-    fn render(&self, f: &mut Frame, area: Rect) {
-        let items = self.config.config.get_map();
+    fn render_detail(&self, f: &mut Frame, area: Rect) {
+        let items = self.config.get_map();
         let size = items.len();
         let constraints = vec![Constraint::Fill(1); size];
         let areas = Layout::default()
@@ -156,19 +155,9 @@ impl ScreenData {
             render_explorer_item(f, areas[i], key, TextStyle::Common);
         }
     }
-}
 
-#[allow(unused)]
-impl ConfigData {
-    fn new(config: Config) -> Self {
-        trace!(target: "ui/core", "Initialize ConfigData");
-        let ptr = 0;
-        let changed = false;
-        ConfigData {
-            config,
-            ptr,
-            changed,
-        }
+    pub fn is_changed(&self) -> bool {
+        self.changed
     }
 
     pub fn get_server(&self) -> Option<&ConfigServer> {
@@ -192,13 +181,5 @@ impl ConfigData {
         let map = self.config.get_map_mut();
         map.shift_remove_index(self.ptr);
         self.changed = true;
-    }
-
-    pub fn is_changed(&self) -> bool {
-        self.changed
-    }
-
-    fn free(self) -> Config {
-        self.config
     }
 }

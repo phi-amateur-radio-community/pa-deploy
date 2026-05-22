@@ -41,11 +41,11 @@ pub fn handler_keyboard(screen: &mut ScreenData, key: KeyEvent) -> HandlerStatus
 
 fn handler_create(screen: &mut ScreenData) {
     debug!(target: "ui/keyboard", "Create entry");
-    screen.get_config_mut().create();
+    screen.create();
 }
 
 fn handler_quit(screen: &mut ScreenData) -> HandlerStatus {
-    if screen.get_config().is_changed() {
+    if screen.is_changed() {
         info!(target: "ui/keyboard", "File is not saved but user try quit");
         return HandlerStatus::Warning(WARNING_UNSAVE);
     }
