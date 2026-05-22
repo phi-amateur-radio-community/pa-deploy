@@ -7,7 +7,7 @@
 // Keyboard handler
 
 use super::core::{ScreenData, ScreenStatus};
-use ratatui::crossterm::event::KeyCode;
+use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tracing::{debug, info};
 
 const WARNING_UNSAVE: &str = "The configuration is not saved. Enter '!' if you want to force quit";
@@ -18,12 +18,16 @@ pub enum HandlerStatus {
     Warning(&'static str),
 }
 
-pub fn handler_keyboard(screen: &mut ScreenData, code: KeyCode) -> HandlerStatus {
-    if matches!(screen.get_status(), ScreenStatus::Warning(_)) && code == KeyCode::Char('!') {
+pub fn handler_keyboard(screen: &mut ScreenData, key: KeyEvent) -> HandlerStatus {
+    if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+        info!(target: "ui/keyboard", "Ctrl + C exit");
+        return HandlerStatus::Break;
+    }
+    if matches!(screen.get_status(), ScreenStatus::Warning(_)) && key.code == KeyCode::Char('!') {
         info!(target: "ui/keyboard", "Force exit");
         return HandlerStatus::Break;
     }
-    match code {
+    match key.code {
         KeyCode::Char('c') => handler_create(screen),
         KeyCode::Char('q') => return handler_quit(screen),
         KeyCode::Char('d') => return HandlerStatus::Continue, // TODO(ui): add create new configure server.

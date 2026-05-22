@@ -15,14 +15,14 @@ use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
     crossterm::{
-        event::{self, Event, KeyCode, KeyModifiers},
+        event::{self, Event},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     layout::{Constraint, Direction, Layout, Rect},
 };
 use std::io;
-use tracing::{debug, info, trace};
+use tracing::{debug, trace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
@@ -105,11 +105,7 @@ impl ScreenData {
                 && !matches!(self.status, ScreenStatus::Input)
             {
                 trace!(target: "ui/core", key = ?key.code, "Press the keyboard");
-                if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
-                    info!(target: "ui/core", "User pressed Ctrl+C");
-                    break;
-                }
-                match handler_keyboard(self, key.code) {
+                match handler_keyboard(self, key) {
                     HandlerStatus::Break => break,
                     HandlerStatus::Continue => {
                         if matches!(self.status, ScreenStatus::Warning(_)) {
