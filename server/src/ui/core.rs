@@ -91,7 +91,7 @@ impl ScreenData {
                             .areas(body);
                     let explorer = render_line(f, explorer);
 
-                    self.render_detail(f, explorer);
+                    self.render_explorer(f, explorer);
                 }
 
                 let mode = match self.status {
@@ -143,7 +143,7 @@ impl ScreenData {
         self.config
     }
 
-    fn render_detail(&self, f: &mut Frame, area: Rect) {
+    fn render_explorer(&self, f: &mut Frame, area: Rect) {
         let items = self.config.get_map();
         let size = items.len();
         let constraints = vec![Constraint::Fill(1); size];
