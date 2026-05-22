@@ -195,7 +195,7 @@ impl ScreenData {
                 MoveAction::Right => self.detail_ptr = Some(0),
             },
         }
-        trace!(target: "ui/core", explorer_ptr = self.ptr, detail_ptr = self.detail_ptr, "Screen status");
+        trace!(target: "ui/core", explorer_ptr = self.ptr, detail_ptr = self.detail_ptr, "User moved");
     }
 
     fn edit(&mut self, config: ConfigServer) {
