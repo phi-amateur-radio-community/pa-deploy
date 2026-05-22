@@ -8,14 +8,22 @@
 
 use super::core::{ScreenData, ScreenStatus};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use tracing::{debug, info};
+use tracing::{debug, info, trace};
 
 const WARNING_UNSAVE: &str = "The configuration is not saved. Enter '!' if you want to force quit";
 
 pub enum HandlerStatus {
     Break,
     Continue,
+    Move(MoveAction),
     Warning(&'static str),
+}
+
+pub enum MoveAction {
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 pub fn handler_keyboard(screen: &mut ScreenData, key: KeyEvent) -> HandlerStatus {
@@ -28,20 +36,25 @@ pub fn handler_keyboard(screen: &mut ScreenData, key: KeyEvent) -> HandlerStatus
         return HandlerStatus::Break;
     }
     match key.code {
+        KeyCode::Up => HandlerStatus::Move(MoveAction::Up),
+        KeyCode::Down => HandlerStatus::Move(MoveAction::Down),
+        KeyCode::Left => HandlerStatus::Move(MoveAction::Left),
+        KeyCode::Right => HandlerStatus::Move(MoveAction::Right),
         KeyCode::Char('c') => handler_create(screen),
-        KeyCode::Char('q') => return handler_quit(screen),
-        KeyCode::Char('d') => return HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('r') => return HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('m') => return HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('s') => return HandlerStatus::Continue, // TODO(ui): add remove new configure server.
-        _ => return HandlerStatus::Continue,
+        KeyCode::Char('q') => handler_quit(screen),
+        KeyCode::Char('d') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('r') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('m') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('s') => HandlerStatus::Continue, // TODO(ui): add remove new configure server.
+        _ => HandlerStatus::Continue,
     }
-    HandlerStatus::Continue
 }
 
-fn handler_create(screen: &mut ScreenData) {
+fn handler_create(screen: &mut ScreenData) -> HandlerStatus {
     debug!(target: "ui/keyboard", "Create entry");
     screen.create();
+    trace!(target: "ui/keyboard", config = ?screen.get_config(), "Display configuration");
+    HandlerStatus::Continue
 }
 
 fn handler_quit(screen: &mut ScreenData) -> HandlerStatus {

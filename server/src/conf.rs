@@ -60,6 +60,10 @@ impl Config {
     pub fn get_map_mut(&mut self) -> &mut IndexMap<String, ConfigServer> {
         &mut self.server
     }
+
+    pub fn get_size(&self) -> usize {
+        self.server.len()
+    }
 }
 
 #[allow(unused)]

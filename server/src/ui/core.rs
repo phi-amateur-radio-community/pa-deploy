@@ -7,7 +7,7 @@
 // Structure and enum definition of TUI.
 
 use super::{
-    keyboard::{HandlerStatus, handler_keyboard},
+    keyboard::{HandlerStatus, MoveAction, handler_keyboard},
     render::*,
 };
 use crate::conf::{Config, ConfigServer};
@@ -36,6 +36,7 @@ pub struct ScreenData {
     focus_index: Option<usize>,
     config: Config,
     ptr: usize,
+    detail_ptr: Option<usize>,
     changed: bool,
 }
 
@@ -54,12 +55,14 @@ impl ScreenData {
         let status = ScreenStatus::Move;
         let focus_index = None;
         let ptr = 0;
+        let detail_ptr = None;
         let changed = false;
         ScreenData {
             status,
             focus_index,
             config,
             ptr,
+            detail_ptr,
             changed,
         }
     }
@@ -112,6 +115,7 @@ impl ScreenData {
                         }
                     }
                     HandlerStatus::Warning(msg) => self.status = ScreenStatus::Warning(msg),
+                    HandlerStatus::Move(action) => self.move_action(action),
                 }
                 trace!(target: "ui/core", screen_status = ?self.status, "Screen status");
             }
@@ -167,8 +171,31 @@ impl ScreenData {
 
     pub fn create(&mut self) {
         let map = self.config.get_map_mut();
+        trace!(target: "ui/core", "Create configure entry");
         map.insert_before(self.ptr, String::new(), ConfigServer::new());
         self.changed = true;
+    }
+
+    pub fn rename(&mut self) {
+        self.status = ScreenStatus::Input;
+    }
+
+    fn move_action(&mut self, action: MoveAction) {
+        match self.detail_ptr {
+            Some(mut ptr) => match action {
+                MoveAction::Up => ptr_loop(&mut ptr, false, self.config.get_size()),
+                MoveAction::Down => ptr_loop(&mut ptr, false, self.config.get_size()),
+                MoveAction::Left => self.detail_ptr = None,
+                MoveAction::Right => {}
+            },
+            None => match action {
+                MoveAction::Up => ptr_loop(&mut self.ptr, true, self.config.get_size()),
+                MoveAction::Down => ptr_loop(&mut self.ptr, false, self.config.get_size()),
+                MoveAction::Left => {}
+                MoveAction::Right => self.detail_ptr = Some(0),
+            },
+        }
+        trace!(target: "ui/core", explorer_ptr = self.ptr, detail_ptr = self.detail_ptr, "Screen status");
     }
 
     fn edit(&mut self, config: ConfigServer) {
@@ -181,5 +208,23 @@ impl ScreenData {
         let map = self.config.get_map_mut();
         map.shift_remove_index(self.ptr);
         self.changed = true;
+    }
+}
+
+fn ptr_loop(ptr: &mut usize, is_up: bool, max: usize) {
+    if max == 0 {
+        return;
+    }
+    if is_up {
+        *ptr += 1;
+        if *ptr == max {
+            *ptr = 0;
+        }
+    } else {
+        if *ptr == 0 {
+            *ptr = max - 1;
+        } else {
+            *ptr -= 1;
+        }
     }
 }
