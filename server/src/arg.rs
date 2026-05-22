@@ -117,7 +117,7 @@ pub fn handle_cli() -> Result<(), ArgError> {
         "stdout" => LogMode::Stdout,
         "file" => LogMode::File(
             matches
-                .get_one::<String>("log-mode")
+                .get_one::<String>("log-path")
                 .ok_or(ArgError::Unknown)?,
         ),
         "disable" => LogMode::Disable,
