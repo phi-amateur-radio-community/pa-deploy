@@ -15,13 +15,14 @@ use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
     crossterm::{
-        event::{self, Event},
+        event::{self, Event, KeyCode, KeyModifiers},
         execute,
         terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
     },
     layout::{Constraint, Direction, Layout, Rect},
 };
 use std::io;
+use tracing::{debug, info, trace};
 
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
@@ -37,19 +38,23 @@ pub struct ScreenData {
 }
 
 #[allow(unused)]
-enum ScreenStatus {
+#[derive(Debug)]
+pub enum ScreenStatus {
     Move,
     Input,
+    Warning(&'static str),
 }
 
 pub struct ConfigData {
     config: Config,
     ptr: usize,
+    changed: bool,
 }
 
 #[allow(unused)]
 impl ScreenData {
     pub fn new(config: Config) -> Self {
+        trace!(target: "ui/core", "Initialize ScreenData");
         let status = ScreenStatus::Move;
         let focus_index = None;
         let config = ConfigData::new(config);
@@ -61,11 +66,13 @@ impl ScreenData {
     }
 
     pub fn display(&mut self) -> Result<(), UiError> {
+        debug!(target: "ui/core", "Display the tui");
         enable_raw_mode()?;
         let mut stdout = io::stdout();
         let _ = execute!(stdout, EnterAlternateScreen);
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
+        trace!(target: "ui/core", "Tui initialization successful");
 
         loop {
             terminal.draw(|f| {
@@ -85,16 +92,33 @@ impl ScreenData {
                     self.render(f, explorer);
                 }
 
-                let _ = render_footer(f, FooterMode::Explorer, footer);
+                let mode = match self.status {
+                    ScreenStatus::Warning(msg) => FooterMode::Warning(msg),
+                    _ => FooterMode::Explorer,
+                };
+
+                render_footer(f, mode, footer);
             })?;
 
             if event::poll(std::time::Duration::from_millis(50))?
                 && let Event::Key(key) = event::read()?
+                && !matches!(self.status, ScreenStatus::Input)
             {
+                trace!(target: "ui/core", key = ?key.code, "Press the keyboard");
+                if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    info!(target: "ui/core", "User pressed Ctrl+C");
+                    break;
+                }
                 match handler_keyboard(self, key.code) {
                     HandlerStatus::Break => break,
-                    HandlerStatus::Continue => continue,
+                    HandlerStatus::Continue => {
+                        if matches!(self.status, ScreenStatus::Warning(_)) {
+                            self.status = ScreenStatus::Move;
+                        }
+                    }
+                    HandlerStatus::Warning(msg) => self.status = ScreenStatus::Warning(msg),
                 }
+                trace!(target: "ui/core", screen_status = ?self.status, "Screen status");
             }
         }
 
@@ -102,6 +126,10 @@ impl ScreenData {
         execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
         Ok(())
+    }
+
+    pub fn get_status(&self) -> &ScreenStatus {
+        &self.status
     }
 
     pub fn get_config(&self) -> &ConfigData {
@@ -129,7 +157,7 @@ impl ScreenData {
                 Some(item) => item,
                 None => break,
             };
-            render_explorer_item(f, areas[i], key, ExplorerStyle::Common);
+            render_explorer_item(f, areas[i], key, TextStyle::Common);
         }
     }
 }
@@ -137,8 +165,14 @@ impl ScreenData {
 #[allow(unused)]
 impl ConfigData {
     fn new(config: Config) -> Self {
+        trace!(target: "ui/core", "Initialize ConfigData");
         let ptr = 0;
-        ConfigData { config, ptr }
+        let changed = false;
+        ConfigData {
+            config,
+            ptr,
+            changed,
+        }
     }
 
     pub fn get_server(&self) -> Option<&ConfigServer> {
@@ -149,16 +183,23 @@ impl ConfigData {
     pub fn create(&mut self) {
         let map = self.config.get_map_mut();
         map.insert_before(self.ptr, String::new(), ConfigServer::new());
+        self.changed = true;
     }
 
     fn edit(&mut self, config: ConfigServer) {
         let map = self.config.get_map_mut();
         map.insert_before(self.ptr, String::new(), config);
+        self.changed = true;
     }
 
     fn delete(&mut self) {
         let map = self.config.get_map_mut();
         map.shift_remove_index(self.ptr);
+        self.changed = true;
+    }
+
+    pub fn is_changed(&self) -> bool {
+        self.changed
     }
 
     fn free(self) -> Config {

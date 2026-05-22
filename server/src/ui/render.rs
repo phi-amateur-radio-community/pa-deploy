@@ -13,26 +13,25 @@ use ratatui::{
     text::Line,
     widgets::{Block, Borders, Paragraph},
 };
-use std::rc::Rc;
 
 #[allow(unused)]
-pub enum ExplorerStyle {
+pub enum TextStyle {
     Common,
     Focus,
     Input,
     Error,
 }
 
-impl ExplorerStyle {
+impl TextStyle {
     pub fn get_color(&self) -> Style {
         match self {
-            ExplorerStyle::Common => Style::new().bg(Color::Black).fg(Color::White),
-            ExplorerStyle::Focus => Style::new().bg(Color::White).fg(Color::Black),
-            ExplorerStyle::Input => Style::new()
+            TextStyle::Common => Style::new().bg(Color::Black).fg(Color::White),
+            TextStyle::Focus => Style::new().bg(Color::White).fg(Color::Black),
+            TextStyle::Input => Style::new()
                 .bg(Color::Black)
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
-            ExplorerStyle::Error => Style::new()
+            TextStyle::Error => Style::new()
                 .bg(Color::Black)
                 .fg(Color::Red)
                 .add_modifier(Modifier::BOLD),
@@ -44,6 +43,7 @@ impl ExplorerStyle {
 pub enum FooterMode {
     Explorer,
     Detail,
+    Warning(&'static str),
 }
 
 impl FooterMode {
@@ -58,6 +58,7 @@ impl FooterMode {
                 "Save [S]",
             ],
             FooterMode::Detail => &[],
+            FooterMode::Warning(_) => &[],
         }
     }
 }
@@ -80,22 +81,34 @@ pub fn render_line(f: &mut Frame, area: Rect) -> Rect {
     line.inner(area)
 }
 
-pub fn render_footer(f: &mut Frame, contents: FooterMode, area: Rect) -> Rc<[Rect]> {
-    let contents = contents.get_content();
+pub fn render_footer(f: &mut Frame, mode: FooterMode, area: Rect) {
+    let contents = mode.get_content();
     let count = contents.len();
     let constraints = vec![Constraint::Fill(1); count];
     let footer = Layout::default()
         .direction(Direction::Horizontal)
         .constraints(constraints)
         .split(area);
-    for (msg, location) in contents.iter().zip(footer.iter()) {
-        let text = Paragraph::new(*msg).alignment(Alignment::Center);
-        f.render_widget(&text, *location);
+    match mode {
+        FooterMode::Explorer => {
+            for (msg, location) in contents.iter().zip(footer.iter()) {
+                let text = Paragraph::new(*msg).alignment(Alignment::Center);
+                f.render_widget(&text, *location);
+            }
+        }
+        FooterMode::Warning(msg) => {
+            let text = Paragraph::new(msg)
+                .alignment(Alignment::Center)
+                .style(TextStyle::Error.get_color());
+            f.render_widget(&text, area);
+        }
+        _ => {
+            // TODO(ui): Add footer render for detail.
+        }
     }
-    footer
 }
 
-pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, style: ExplorerStyle) {
+pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, style: TextStyle) {
     let text = Paragraph::new(name).style(style.get_color());
     f.render_widget(text, area);
 }
