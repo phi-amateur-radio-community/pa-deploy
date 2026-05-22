@@ -24,6 +24,8 @@ use ratatui::{
 use std::io;
 use tracing::{debug, trace};
 
+const CONFIGURE_SIZE: usize = 0;
+
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
     #[error("IO error")]
@@ -183,8 +185,8 @@ impl ScreenData {
     fn move_action(&mut self, action: MoveAction) {
         match self.detail_ptr {
             Some(mut ptr) => match action {
-                MoveAction::Up => ptr_loop(&mut ptr, false, self.config.get_size()),
-                MoveAction::Down => ptr_loop(&mut ptr, false, self.config.get_size()),
+                MoveAction::Up => ptr_loop(&mut ptr, false, CONFIGURE_SIZE),
+                MoveAction::Down => ptr_loop(&mut ptr, false, CONFIGURE_SIZE),
                 MoveAction::Left => self.detail_ptr = None,
                 MoveAction::Right => {}
             },
