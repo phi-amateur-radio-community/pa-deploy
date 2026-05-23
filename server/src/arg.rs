@@ -74,10 +74,18 @@ fn build_cli() -> Command {
                     .about("Manage configuration files and options")
                     .arg(
                         Arg::new("path")
-                            .help("Path to the configuration file, default /etc/padeploy/conf.toml")
+                            .help("Path of the configuration file")
                             .default_value("/etc/padeploy/conf.toml")
                             .value_name("PATH"),
                     ),
+            )
+            .subcommand(
+                Command::new("run").about("Run server").arg(
+                    Arg::new("path")
+                        .help("Path of the configuration file")
+                        .default_value("/etc/padeploy/conf.toml")
+                        .value_name("PATH"),
+                ),
             ),
     )
 }
@@ -142,6 +150,9 @@ pub fn handle_cli() -> Result<(), ArgError> {
             screen.display()?;
             let config = screen.free();
             config.save(path)?;
+        }
+        Some(("run", _sub_m)) => {
+            // TODO(run): run the server
         }
         _ => {
             error!(target: "arg", "Unknown command");
