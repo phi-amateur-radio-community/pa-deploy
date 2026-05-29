@@ -86,7 +86,7 @@ fn build_cli() -> Command {
                         .default_value("/etc/padeploy/conf.toml")
                         .value_name("PATH"),
                 ),
-            ),
+            )
             .subcommand(
                 Command::new("test").about("Test configuration").arg(
                     Arg::new("path")
@@ -94,7 +94,7 @@ fn build_cli() -> Command {
                         .default_value("/etc/padeploy/conf.toml")
                         .value_name("PATH"),
                 ),
-            ),
+            )
             .subcommand(
                 Command::new("status").about("Get status about server"),
             ),
