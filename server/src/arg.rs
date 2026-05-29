@@ -87,6 +87,17 @@ fn build_cli() -> Command {
                         .value_name("PATH"),
                 ),
             ),
+            .subcommand(
+                Command::new("test").about("Test configuration").arg(
+                    Arg::new("path")
+                        .help("Path of the configuration file")
+                        .default_value("/etc/padeploy/conf.toml")
+                        .value_name("PATH"),
+                ),
+            ),
+            .subcommand(
+                Command::new("status").about("Get status about server"),
+            ),
     )
 }
 
@@ -153,6 +164,12 @@ pub fn handle_cli() -> Result<(), ArgError> {
         }
         Some(("run", _sub_m)) => {
             // TODO(run): run the server
+        }
+        Some(("test", _sub_m)) => {
+            // TODO(test): test the configuration
+        }
+        Some(("status", _sub_m)) => {
+            // TODO(status): get status
         }
         _ => {
             error!(target: "arg", "Unknown command");
