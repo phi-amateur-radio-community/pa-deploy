@@ -95,9 +95,7 @@ fn build_cli() -> Command {
                         .value_name("PATH"),
                 ),
             )
-            .subcommand(
-                Command::new("status").about("Get status about server"),
-            ),
+            .subcommand(Command::new("status").about("Get status about server")),
     )
 }
 
