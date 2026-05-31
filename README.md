@@ -1,7 +1,7 @@
 # Pa Deploy
 
 > Author: St Rangeset
-> Date: 2026-05-11
+> Date: 2026-05-31
 
 ## Description
 
@@ -16,7 +16,7 @@ Download to your server from the link [below](#download) and enable it.
 And to modify the configuration.
 
 > [!TIP]
-> When you can't use the HTTPS, We recommond that you use `X25519` and `Ed25519` to ensure security.
+> When you can't use the HTTPS, We recommond that you use `AES256-GCM` and `Ed25519` to ensure security.
 
 ## Download
 
