@@ -9,6 +9,7 @@ This project is used for the automated deployment of the project on the server, 
 
 - Supports multiple **Security** options for communication (e.g., HMAC-SHA256 signature, request body encryption).
 - **Retrieve deployment status and logs** asynchronously after execution.
+- Support GitHub Actions, and provide the [action.yml](/pad-tools/actions/action.yml).
 
 ## Quick User Manual
 
