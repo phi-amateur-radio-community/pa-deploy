@@ -6,19 +6,19 @@
 // Path /server/src/ui/render.rs
 // Render for TUI
 
+/*
+
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::Line,
+    text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
 };
 
-#[allow(unused)]
 pub enum TextStyle {
     Common,
     Focus,
-    Input,
     Error,
 }
 
@@ -27,10 +27,6 @@ impl TextStyle {
         match self {
             TextStyle::Common => Style::new().bg(Color::Black).fg(Color::White),
             TextStyle::Focus => Style::new().bg(Color::White).fg(Color::Black),
-            TextStyle::Input => Style::new()
-                .bg(Color::Black)
-                .fg(Color::White)
-                .add_modifier(Modifier::BOLD),
             TextStyle::Error => Style::new()
                 .bg(Color::Black)
                 .fg(Color::Red)
@@ -39,7 +35,6 @@ impl TextStyle {
     }
 }
 
-#[allow(unused)]
 pub enum FooterMode {
     Explorer,
     Detail,
@@ -112,3 +107,41 @@ pub fn render_explorer_item(f: &mut Frame, area: Rect, name: &str, style: TextSt
     let text = Paragraph::new(name).style(style.get_color());
     f.render_widget(text, area);
 }
+
+pub fn render_edit(f: &mut Frame, area: Rect, text: &str, location: usize) {
+    let mut spans = Vec::new();
+    let mut in_str = false;
+    for (i, c) in text.chars().enumerate() {
+        let style = if i == location {
+            in_str = true;
+            Style::new()
+                .bg(Color::Black)
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::new()
+                .bg(Color::White)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD)
+        };
+
+        spans.push(Span::styled(c.to_string(), style));
+    }
+    if !in_str {
+        spans.push(Span::styled(
+            " ",
+            Style::new()
+                .bg(Color::Black)
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        ));
+    }
+    let text = Paragraph::new(Line::from(spans));
+    f.render_widget(text, area);
+}
+
+impl ConfigServerMap {
+    pub fn render(&self, area: Rect) {}
+}
+
+*/

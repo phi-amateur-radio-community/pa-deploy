@@ -9,7 +9,7 @@
 mod arg;
 mod conf;
 mod log;
-mod ui;
+// mod ui;
 
 fn main() {
     let _ = arg::handle_cli();

@@ -9,7 +9,7 @@
 use crate::{
     conf::{Config, ConfigError},
     log::{LogLevel, LogMode, init_log},
-    ui,
+    //    ui,
 };
 use clap::{Arg, ArgAction, Command};
 use tracing::{error, info};
@@ -22,8 +22,8 @@ pub enum ArgError {
     MissingPath,
     #[error("Unknown error")]
     Unknown,
-    #[error("Ui error")]
-    Ui(#[from] ui::UiError),
+    //#[error("Ui error")]
+    //Ui(#[from] ui::UiError),
     #[error("IO error")]
     Io(#[from] std::io::Error),
 }
@@ -154,11 +154,11 @@ pub fn handle_cli() -> Result<(), ArgError> {
             let path = sub_m
                 .get_one::<String>("path")
                 .ok_or(ArgError::MissingPath)?;
-            let config = Config::new(path)?;
-            let mut screen = ui::ScreenData::new(config);
-            screen.display()?;
-            let config = screen.free();
-            config.save(path)?;
+            let _config = Config::new(path)?;
+            //let mut screen = ui::ScreenData::new(config);
+            //screen.display()?;
+            //let config = screen.free();
+            //config.save(path)?;
         }
         Some(("run", _sub_m)) => {
             // TODO(run): run the server

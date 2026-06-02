@@ -7,10 +7,10 @@
 // Structure and enum definition of TUI.
 
 use super::{
-    keyboard::{HandlerStatus, MoveAction, handler_keyboard},
+    keyboard::{HandlerAction, MoveAction, handler_keyboard},
     render::*,
 };
-use crate::conf::{Config, ConfigServer};
+use crate::conf::{Config, ConfigServer, ConfigServerMap};
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
@@ -24,46 +24,45 @@ use ratatui::{
 use std::io;
 use tracing::{debug, trace};
 
-const CONFIGURE_SIZE: usize = 0;
-
+/*
 #[derive(Debug, thiserror::Error)]
 pub enum UiError {
     #[error("IO error")]
     Io(#[from] std::io::Error),
 }
 
-#[allow(unused)]
 pub struct ScreenData {
-    status: ScreenStatus,
-    focus_index: Option<usize>,
-    config: Config,
-    ptr: usize,
-    detail_ptr: Option<usize>,
-    changed: bool,
+    pub(crate) status: ScreenStatus,
+    pub(crate) map_cache: ConfigServerMap,
+    pub(crate) config: Config,
+    pub(crate) ptr: usize,
+    pub(crate) ptr_name: &mut String,
+    pub(crate) detail_ptr: Option<usize>,
+    pub(crate) changed: bool,
 }
 
-#[allow(unused)]
 #[derive(Debug)]
 pub enum ScreenStatus {
     Move,
-    Input,
+    Input(usize, &mut String),
     Warning(&'static str),
 }
 
-#[allow(unused)]
 impl ScreenData {
     pub fn new(config: Config) -> Self {
         trace!(target: "ui/core", "Initialize ScreenData");
         let status = ScreenStatus::Move;
-        let focus_index = None;
+        let map_cache = ConfigServerMap::new();
         let ptr = 0;
+        let ptr_name = config.get_entry_key(ptr);
         let detail_ptr = None;
         let changed = false;
         ScreenData {
             status,
-            focus_index,
+            map_cache,
             config,
             ptr,
+            ptr_name,
             detail_ptr,
             changed,
         }
@@ -106,18 +105,16 @@ impl ScreenData {
 
             if event::poll(std::time::Duration::from_millis(50))?
                 && let Event::Key(key) = event::read()?
-                && !matches!(self.status, ScreenStatus::Input)
             {
                 trace!(target: "ui/core", key = ?key.code, "Press the keyboard");
                 match handler_keyboard(self, key) {
-                    HandlerStatus::Break => break,
-                    HandlerStatus::Continue => {
-                        if matches!(self.status, ScreenStatus::Warning(_)) {
-                            self.status = ScreenStatus::Move;
-                        }
-                    }
-                    HandlerStatus::Warning(msg) => self.status = ScreenStatus::Warning(msg),
-                    HandlerStatus::Move(action) => self.move_action(action),
+                    HandlerAction::Break => break,
+                    HandlerAction::Continue => {}
+                    HandlerAction::Create => self.create(),
+                    HandlerAction::Quit => self.quit(),
+                    HandlerAction::ChangeStatus(status) => self.status = status,
+                    HandlerAction::Warning(msg) => self.status = ScreenStatus::Warning(msg),
+                    HandlerAction::Move(action) => self.move(action),
                 }
                 trace!(target: "ui/core", screen_status = ?self.status, "Screen status");
             }
@@ -127,18 +124,6 @@ impl ScreenData {
         execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
         Ok(())
-    }
-
-    pub fn get_status(&self) -> &ScreenStatus {
-        &self.status
-    }
-
-    pub fn get_config(&self) -> &Config {
-        &self.config
-    }
-
-    pub fn get_config_mut(&mut self) -> &mut Config {
-        &mut self.config
     }
 
     pub fn free(self) -> Config {
@@ -158,17 +143,19 @@ impl ScreenData {
                 Some(item) => item,
                 None => break,
             };
-            render_explorer_item(f, areas[i], key, TextStyle::Common);
+            if (self.ptr != i) {
+                render_explorer_item(f, areas[i], key, TextStyle::Common);
+            }
+            if let ScreenStatus::Input(location) = self.status
+                && self.detail_ptr.is_none()
+            {
+                render_edit(f, areas[i], key, location);
+            }
         }
     }
 
-    pub fn is_changed(&self) -> bool {
+    fn is_changed(&self) -> bool {
         self.changed
-    }
-
-    pub fn get_server(&self) -> Option<&ConfigServer> {
-        let (_, server) = self.config.get_map().get_index(self.ptr)?;
-        Some(server)
     }
 
     pub fn create(&mut self) {
@@ -176,28 +163,32 @@ impl ScreenData {
         trace!(target: "ui/core", "Create configure entry");
         map.insert_before(self.ptr, String::new(), ConfigServer::new());
         self.changed = true;
+        self.rename();
     }
 
-    pub fn rename(&mut self) {
-        self.status = ScreenStatus::Input;
+    pub fn rename(&mut self) -> Option<()> {
+        let (key, _) = self.config.get_map().get_index(self.ptr)?;
+        self.status = ScreenStatus::Input(key.len());
+        Some(())
     }
 
-    fn move_action(&mut self, action: MoveAction) {
+    pub fn get_ptr_len(&self) -> Option<usize> {
         match self.detail_ptr {
-            Some(mut ptr) => match action {
-                MoveAction::Up => ptr_loop(&mut ptr, false, CONFIGURE_SIZE),
-                MoveAction::Down => ptr_loop(&mut ptr, false, CONFIGURE_SIZE),
-                MoveAction::Left => self.detail_ptr = None,
-                MoveAction::Right => {}
-            },
-            None => match action {
-                MoveAction::Up => ptr_loop(&mut self.ptr, true, self.config.get_size()),
-                MoveAction::Down => ptr_loop(&mut self.ptr, false, self.config.get_size()),
-                MoveAction::Left => {}
-                MoveAction::Right => self.detail_ptr = Some(0),
-            },
+            Some(location) => self.config.get,
+            None => {}
         }
-        trace!(target: "ui/core", explorer_ptr = self.ptr, detail_ptr = self.detail_ptr, "User moved");
+    }
+
+    pub fn get_entry(&self) -> Option<Entry<String, ConfigServer>> {
+        self.config.get_map().get_index(self.ptr)?
+    }
+
+    pub fn get_detail_location() {}
+
+    pub fn edit_content(&mut self) {
+        if let Some(len) = self.get_ptr_len() {
+            self.status = ScreenStatus::Input(len);
+        }
     }
 
     fn edit(&mut self, config: ConfigServer) {
@@ -212,21 +203,4 @@ impl ScreenData {
         self.changed = true;
     }
 }
-
-fn ptr_loop(ptr: &mut usize, is_up: bool, max: usize) {
-    if max == 0 {
-        return;
-    }
-    if is_up {
-        *ptr += 1;
-        if *ptr == max {
-            *ptr = 0;
-        }
-    } else {
-        if *ptr == 0 {
-            *ptr = max - 1;
-        } else {
-            *ptr -= 1;
-        }
-    }
-}
+*/

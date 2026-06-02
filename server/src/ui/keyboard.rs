@@ -10,13 +10,18 @@ use super::core::{ScreenData, ScreenStatus};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tracing::{debug, info, trace};
 
-const WARNING_UNSAVE: &str = "The configuration is not saved. Enter '!' if you want to force quit";
+/*
 
-pub enum HandlerStatus {
+const WARNING_UNSAVE: &str = "The configuration is not saved. Enter '!' if you want to force quit";
+const WARNING_ASCII: &str = "The input is only support ascii";
+
+pub enum HandlerAction {
     Break,
     Continue,
+    Create,
+    Quit,
     Move(MoveAction),
-    Warning(&'static str),
+    ChangeStatus(ScreenStatus),
 }
 
 pub enum MoveAction {
@@ -26,42 +31,85 @@ pub enum MoveAction {
     Right,
 }
 
-pub fn handler_keyboard(screen: &mut ScreenData, key: KeyEvent) -> HandlerStatus {
+impl ScreenData {
+fn handler_keyboard(&self, key: KeyEvent) -> HandlerAction {
+    match self.status {
+        ScreenStatus::Input(p, s) => self.handler_keyboard_input(p, s, key),
+        _ => self.handler_keyboard_move(key),
+    }
+}
+
+fn handler_keyboard_input(&self, ptr: usize, string: &mut String, key: KeyEvent) -> HandlerAction {
+    match key.code {
+        KeyCode::Esc => HandlerAction::ChangeStatus(ScreenStatus::Move),
+        KeyCode::Left => {
+            if let Input(location) = screen.get_status()
+                && location > 0
+            {
+                HandlerAction::ChangeStatus(ScreenStatus::Input(location - 1, string))
+            } else {
+                HandlerAction::Continue
+            }
+        }
+        KeyCode::Right => {
+            let (key, _) = screen.get_config().get_map().get_index(self.ptr)?;
+            if let Input(location) = screen.get_status()
+                && location > 0
+            {
+                HandlerAction::ChangeStatus(ScreenStatus::Input(location - 1, string))
+            } else {
+                HandlerAction::Continue
+            }
+        }
+        KeyCode::Backspace => {
+            if let Some(location) = ptr.checked_sub(1) {
+                remove_at(string, location);
+            }
+            HandlerAction::Continue
+        }
+        KeyCode::Delete => {
+            remove_at(string, ptr);
+            HandlerAction::Continue
+        }
+        KeyCode::Char(c) => {
+            if c.is_ascii() {
+                string.insert(ptr, c);
+                HandlerAction::Continue
+            } else {
+                HandlerAction::ChangeStatus(ScreenStatus::Warning(WARNING_ASCII))
+            }
+        }
+        _ => HandlerAction::Continue;
+    }
+}
+
+fn handler_keyboard_move(&self, key: KeyEvent) -> HandlerAction {
     if key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL) {
         info!(target: "ui/keyboard", "Ctrl + C exit");
-        return HandlerStatus::Break;
+        return HandlerAction::Break;
     }
-    if matches!(screen.get_status(), ScreenStatus::Warning(_)) && key.code == KeyCode::Char('!') {
+    if matches!(self.status, ScreenStatus::Warning(_)) && key.code == KeyCode::Char('!') {
         info!(target: "ui/keyboard", "Force exit");
-        return HandlerStatus::Break;
+        return HandlerAction::Break;
     }
     match key.code {
-        KeyCode::Up => HandlerStatus::Move(MoveAction::Up),
-        KeyCode::Down => HandlerStatus::Move(MoveAction::Down),
-        KeyCode::Left => HandlerStatus::Move(MoveAction::Left),
-        KeyCode::Right => HandlerStatus::Move(MoveAction::Right),
-        KeyCode::Char('c') => handler_create(screen),
-        KeyCode::Char('q') => handler_quit(screen),
-        KeyCode::Char('d') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('r') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('m') => HandlerStatus::Continue, // TODO(ui): add create new configure server.
-        KeyCode::Char('s') => HandlerStatus::Continue, // TODO(ui): add remove new configure server.
-        _ => HandlerStatus::Continue,
+        KeyCode::Up => HandlerAction::Move(MoveAction::Up),
+        KeyCode::Down => HandlerAction::Move(MoveAction::Down),
+        KeyCode::Left => HandlerAction::Move(MoveAction::Left),
+        KeyCode::Right => HandlerAction::Move(MoveAction::Right),
+        KeyCode::Char('c') => HandlerAction::Create,
+        KeyCode::Char('q') => HandlerAction::Quit,
+        KeyCode::Char('d') => HandlerAction::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('r') => HandlerAction::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('m') => HandlerAction::Continue, // TODO(ui): add create new configure server.
+        KeyCode::Char('s') => HandlerAction::Continue, // TODO(ui): add remove new configure server.
+        _ => HandlerAction::Continue,
     }
 }
-
-fn handler_create(screen: &mut ScreenData) -> HandlerStatus {
-    debug!(target: "ui/keyboard", "Create entry");
-    screen.create();
-    trace!(target: "ui/keyboard", config = ?screen.get_config(), "Display configuration");
-    HandlerStatus::Continue
 }
 
-fn handler_quit(screen: &mut ScreenData) -> HandlerStatus {
-    if screen.is_changed() {
-        info!(target: "ui/keyboard", "File is not saved but user try quit");
-        return HandlerStatus::Warning(WARNING_UNSAVE);
-    }
-    info!(target: "ui/keyboard", "Common exit");
-    HandlerStatus::Break
+fn remove_at(string: &mut String, location: usize) {
+    string.remove(location);
 }
+
+*/
