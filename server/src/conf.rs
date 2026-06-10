@@ -6,14 +6,13 @@
 // Path /server/src/conf.rs
 // Manage configuration.
 
-use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
-    server: IndexMap<String, ConfigServer>,
+    server: Vec<(String, ConfigServer)>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -22,10 +21,9 @@ pub struct ConfigServer {
     bind: String,
 }
 
-#[allow(unused)]
-pub struct ConfigServerMap {
-    content: IndexMap<String, String>,
-    change: bool,
+pub struct ConfigServerPlat {
+    name: String,
+    data: Vec<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -48,7 +46,7 @@ impl Config {
             toml::from_str(&file)?
         } else {
             Config {
-                server: IndexMap::<String, ConfigServer>::new(),
+                server: Vec::<(String, ConfigServer)>::new(),
             }
         })
     }
@@ -59,78 +57,36 @@ impl Config {
         Ok(())
     }
 
-    pub fn get_map(&self) -> &IndexMap<String, ConfigServer> {
-        &self.server
+    pub fn get_entry(&self, ptr: usize) -> ConfigServerPlat {
+        let (name, data) = &self.server[ptr].clone();
+        let name = name.to_string();
+        let data = data.get();
+        ConfigServerPlat { name, data }
     }
 
-    pub fn get_entry(&self, ptr: usize) -> Option<(&String, &ConfigServer)> {
-        self.server.get_index(ptr)
-    }
+    pub fn set_entry(&mut self, ptr: usize, data: ConfigServerPlat) -> Result<(), ConfigError> {
+        let ConfigServerPlat { name, data } = data;
 
-    pub fn get_size(&self) -> usize {
-        self.server.len()
+        let data = ConfigServer::set(data)?;
+
+        self.server[ptr] = (name, data);
+        Ok(())
     }
 }
 
-#[allow(unused)]
 impl ConfigServer {
-    pub fn edit(&mut self, content: ConfigServerMap) -> Self {
-        ConfigServer {
-            port: 0,
-            bind: String::new(),
-        }
+    pub fn get(&self) -> Vec<String> {
+        vec![self.bind.clone(), self.port.to_string()]
     }
 
-    pub fn get_port(&self) -> &u16 {
-        &self.port
-    }
-
-    pub fn get_bind(&self) -> &String {
-        &self.bind
-    }
-}
-
-#[allow(unused)]
-impl ConfigServerMap {
-    pub fn new() -> Self {
-        let mut map = IndexMap::<String, String>::new();
-        map.insert("port".to_string(), String::new());
-        map.insert("bind".to_string(), String::new());
-        ConfigServerMap {
-            content: map,
-            change: false,
-        }
-    }
-
-    pub fn map(source: &ConfigServer) -> Self {
-        let mut map = IndexMap::<String, String>::new();
-        map.insert("port".to_string(), source.get_port().to_string());
-        map.insert("bind".to_string(), source.get_bind().to_string());
-        ConfigServerMap {
-            content: map,
-            change: false,
-        }
-    }
-
-    fn unmap(mut self) -> Result<ConfigServer, ConfigError> {
-        let port = self
-            .content
-            .shift_remove("port")
+    pub fn set(data: Vec<String>) -> Result<Self, ConfigError> {
+        let mut data_iter = data.into_iter();
+        let bind = data_iter.next().ok_or(ConfigError::Unknown)?;
+        let port = data_iter
+            .next()
             .ok_or(ConfigError::Unknown)?
             .parse::<u16>()
             .unwrap_or_default();
-        let bind = self
-            .content
-            .shift_remove("bind")
-            .ok_or(ConfigError::Unknown)?;
-        Ok(ConfigServer { port, bind })
-    }
-
-    pub fn get_mut_index(&mut self, ptr: usize) -> &mut String {
-        &mut self.content[ptr]
-    }
-
-    pub fn get_len(&self) -> usize {
-        self.content.len()
+        Ok(ConfigServer { bind, port })
     }
 }
